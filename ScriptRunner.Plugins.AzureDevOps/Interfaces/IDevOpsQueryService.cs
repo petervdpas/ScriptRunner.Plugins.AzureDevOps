@@ -41,11 +41,38 @@ public interface IDevOpsQueryService
     /// </returns>
     Task<WorkItemViewModel?> FetchWorkItemDetails(string workItemId);
 
+    /// <summary>
+    /// Adds a new saved query to the database.
+    /// </summary>
+    /// <param name="query">
+    /// The <see cref="SavedQuery"/> object to be added. The query includes a unique identifier, name, and query text.
+    /// </param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     Task AddSavedQuery(SavedQuery query);
 
+    /// <summary>
+    /// Retrieves all saved queries from the database.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="Task"/> that represents the asynchronous operation. The task result contains a list of <see cref="SavedQuery"/> objects.
+    /// </returns>
     Task<List<SavedQuery>> GetSavedQueries();
 
+    /// <summary>
+    /// Updates an existing saved query in the database.
+    /// </summary>
+    /// <param name="query">
+    /// The <see cref="SavedQuery"/> object containing updated information. The query must have a valid identifier.
+    /// </param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     Task UpdateSavedQuery(SavedQuery query);
 
+    /// <summary>
+    /// Deletes a saved query from the database by its unique identifier.
+    /// </summary>
+    /// <param name="queryId">
+    /// The <see cref="Guid"/> representing the unique identifier of the saved query to delete.
+    /// </param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     Task DeleteSavedQuery(Guid queryId);
 }
