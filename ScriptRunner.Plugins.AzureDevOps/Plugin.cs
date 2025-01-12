@@ -80,6 +80,9 @@ public class Plugin : BaseAsyncServicePlugin
             var configService = provider.GetRequiredService<IDevOpsConfigService>();
             return new DevOpsQueryService(configService, sqliteDatabase);
         });
+        
+        services.AddSingleton<IAzureDevOpsDialogService>(sp =>
+            new AzureDevOpsDialogService(sp.GetRequiredService<IDevOpsQueryService>()));
     }
     
     /// <summary>

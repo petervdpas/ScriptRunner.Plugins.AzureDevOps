@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using ReactiveUI;
 using ScriptRunner.Plugins.AzureDevOps.Interfaces;
 using ScriptRunner.Plugins.AzureDevOps.Models;
@@ -14,7 +15,8 @@ namespace ScriptRunner.Plugins.AzureDevOps.ViewModels;
 /// </summary>
 public class AzureDevOpsModel : ReactiveObject
 {
-    private readonly IDevOpsQueryService _devOpsQueryService;
+    private readonly IDevOpsQueryService _queryService;
+    private readonly Window _dialog;
 
     private WorkItemViewModel? _selectedItem;
     private int _selectedTabIndex;
@@ -101,10 +103,12 @@ public class AzureDevOpsModel : ReactiveObject
     /// <summary>
     /// Initializes a new instance of the <see cref="AzureDevOpsModel"/> class.
     /// </summary>
-    /// <param name="devOpsQueryService">The service used to interact with Azure DevOps queries and work items.</param>
-    public AzureDevOpsModel(IDevOpsQueryService devOpsQueryService)
+    /// <param name="dialog">The parent dialog window managing this ViewModel.</param>
+    /// <param name="queryService">The service used to interact with Azure DevOps queries and work items.</param>
+    public AzureDevOpsModel(Window dialog, IDevOpsQueryService queryService)
     {
-        _devOpsQueryService = devOpsQueryService;
+        _dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
+        _queryService = queryService;
 
         CurrentQuery = new SavedQuery
         {
@@ -130,10 +134,10 @@ public class AzureDevOpsModel : ReactiveObject
 
         if (CurrentQuery == null) return;
 
-        var query = _devOpsQueryService.ReplaceAreaPath(CurrentQuery.QueryText);
+        var query = _queryService.ReplaceAreaPath(CurrentQuery.QueryText);
         if (query != null)
         {
-            var workItemsArray = await _devOpsQueryService.ExecuteQuery(query);
+            var workItemsArray = await _queryService.ExecuteQuery(query);
 
             if (workItemsArray != null)
             {
@@ -142,7 +146,7 @@ public class AzureDevOpsModel : ReactiveObject
                     var workItemId = workItem["id"]?.ToString();
                     if (workItemId == null) continue;
 
-                    var workItemDetails = await _devOpsQueryService.FetchWorkItemDetails(workItemId);
+                    var workItemDetails = await _queryService.FetchWorkItemDetails(workItemId);
 
                     WorkItems.Add(workItemDetails ?? new WorkItemViewModel
                     {
@@ -178,7 +182,7 @@ public class AzureDevOpsModel : ReactiveObject
             return;
         }
 
-        await _devOpsQueryService.AddSavedQuery(CurrentQuery);
+        await _queryService.AddSavedQuery(CurrentQuery);
         SavedQueries.Add(new SavedQuery
         {
             Id = CurrentQuery.Id,
@@ -194,7 +198,7 @@ public class AzureDevOpsModel : ReactiveObject
     {
         if (SelectedSavedQuery == null) return;
 
-        await _devOpsQueryService.DeleteSavedQuery(SelectedSavedQuery.Id);
+        await _queryService.DeleteSavedQuery(SelectedSavedQuery.Id);
         SavedQueries.Remove(SelectedSavedQuery);
     }
 
@@ -205,10 +209,18 @@ public class AzureDevOpsModel : ReactiveObject
     {
         SavedQueries.Clear();
 
-        var queries = await _devOpsQueryService.GetSavedQueries();
+        var queries = await _queryService.GetSavedQueries();
         foreach (var query in queries)
         {
             SavedQueries.Add(query);
         }
+    }
+    
+    /// <summary>
+    /// Closes the dialog window without returning any result.
+    /// </summary>
+    private void CloseDialog()
+    {
+        _dialog.Close(null);
     }
 }
