@@ -1,0 +1,42 @@
+[
+  {
+    "Key": "PluginName",
+    "Type": "string",
+    "Value": "AzureDevOps"
+  },
+  {
+    "Key": "Organization",
+    "Type": "string",
+    "Value": "your-organization"
+  },
+  {
+    "Key": "Project",
+    "Type": "string",
+    "Value": "your-project"
+  },
+  {
+    "Key": "PersonalAccessToken",
+    "Type": "string",
+    "Value": "your-personal-access-token"
+  },
+  {
+    "Key": "AreaPath",
+    "Type": "string",
+    "Value": "your-project\\TeamName\\AreaPath"
+  },
+  {
+    "Key": "ApiEndpoint",
+    "Type": "string",
+    "Value": "https://dev.azure.com"
+  },
+  {
+    "Key": "Timeout",
+    "Type": "int",
+    "Value": "30"
+  },
+  {
+    "Key": "DbPath",
+    "Type": "string",
+    "Value": "path/to/database.sqlite"
+  }
+]

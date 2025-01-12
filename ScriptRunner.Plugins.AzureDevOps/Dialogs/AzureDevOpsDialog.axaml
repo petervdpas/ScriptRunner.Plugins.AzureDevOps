@@ -1,0 +1,68 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ScriptRunner.Plugins.AzureDevOps.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:AzureDevOpsModel, IsDesignTimeCreatable=True}"
+        x:Class="ScriptRunner.Plugins.AzureDevOps.Dialogs.AzureDevOpsDialog"
+        Title="AzureDevOpsDialog"
+        Width="1280"
+        Height="720"
+        Icon="avares://ScriptRunner/Assets/hacker.ico"
+        WindowStartupLocation="CenterScreen"
+        x:DataType="vm:AzureDevOpsModel">
+    <Grid>
+        <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" >
+            <TabItem Header="Queries">
+                <StackPanel Margin="10">
+                    <TextBox 
+                        Text="{Binding CurrentQuery.Name, FallbackValue=''}" 
+                        Watermark="Enter query name" Margin="5"/>
+                    <TextBox 
+                        Text="{Binding CurrentQuery.QueryText, FallbackValue=''}" 
+                        AcceptsReturn="True" Height="200" Margin="5"/>
+                    <Button Content="Execute Query" Command="{Binding ExecuteQueryCommand}" Margin="5"/>
+                    <Button Content="Save Query" Command="{Binding SaveQueryCommand}" Margin="5"/>
+                    <ListBox 
+                        ItemsSource="{Binding SavedQueries}" 
+                        SelectedItem="{Binding SelectedSavedQuery}" 
+                        Margin="5">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="WorkItems">
+                <Grid Margin="0,0,0,16" ColumnDefinitions="2*,5,3*">
+                    <ListBox ItemsSource="{Binding WorkItems}" 
+                             SelectedItem="{Binding SelectedItem, Mode=TwoWay}" 
+                             ScrollViewer.VerticalScrollBarVisibility="Visible" 
+                             Margin="10"
+                             Grid.Column="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ListItem}" Margin="5"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <GridSplitter Width="2" Background="Gray" ShowsPreview="True" Margin="0" 
+                                  VerticalAlignment="Stretch" HorizontalAlignment="Center" Grid.Column="1"/>
+                    <ScrollViewer Grid.Column="2" Margin="10">
+                        <StackPanel>
+                            <TextBlock 
+                                Text="{Binding SelectedItem.ListItem, FallbackValue='No Item'}" 
+                                FontSize="20" Margin="5"/>
+                            <TextBlock 
+                                Text="{Binding SelectedItem.Details.Description, FallbackValue='No Description'}" 
+                                TextWrapping="Wrap" Margin="5"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
