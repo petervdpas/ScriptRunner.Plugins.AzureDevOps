@@ -37,6 +37,6 @@
   {
     "Key": "DbPath",
     "Type": "string",
-    "Value": "path/to/database.sqlite"
+    "Value": "azuredevops.db"
   }
 ]
