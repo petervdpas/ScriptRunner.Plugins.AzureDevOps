@@ -18,12 +18,12 @@ namespace ScriptRunner.Plugins.AzureDevOps;
 /// </remarks>
 [PluginMetadata(
     "AzureDevOps",
-    "A plugin that provides...",
+    "A plugin to query Azure DevOps with script runner",
     "Peter van de Pas",
     "1.0.0",
     PluginSystemConstants.CurrentPluginSystemVersion,
     PluginSystemConstants.CurrentFrameworkVersion,
-    [])]
+    services: ["IDevOpsConfigService", "IDevOpsQueryService", "IAzureDevOpsDialogService"])]
 public class Plugin : BaseAsyncServicePlugin
 {
     /// <summary>
@@ -61,6 +61,13 @@ public class Plugin : BaseAsyncServicePlugin
     {
         // Simulate async service registration (e.g., initializing an external resource)
         await Task.Delay(50);
+        
+        if (LocalStorage == null)
+        {
+            throw new InvalidOperationException(
+                "LocalStorage has not been initialized. " +
+                "Ensure the host injects LocalStorage before calling InitializeAsync.");
+        }
         
         // Register the service
         services.AddSingleton<IDevOpsConfigService>(_ => new DevOpsConfigService(LocalStorage));
