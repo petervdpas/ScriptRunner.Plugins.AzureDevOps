@@ -15,10 +15,6 @@ public static class DevOpsConfigHelper
     /// <returns>A <see cref="DevOpsConfigItem"/> containing the configuration settings.</returns>
     public static DevOpsConfigItem GetConfiguration()
     {
-        var dbPath = PluginSettingsHelper.RetrieveSetting<string>("DbPath");
-        
-        Console.WriteLine($"dbPath: {dbPath}");
-        
         return new DevOpsConfigItem
         {
             Organization = PluginSettingsHelper.RetrieveSetting<string>("Organization"),

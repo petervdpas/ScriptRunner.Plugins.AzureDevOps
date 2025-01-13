@@ -37,6 +37,8 @@ public class DevOpsQueryService : IDevOpsQueryService
             throw new InvalidOperationException("Database path (DbPath) is not configured.");
         }
         
+        Console.WriteLine($"dbPath: {_config.DbPath}");
+        
         _database.Setup($"Data Source={_config.DbPath}");
         
         InitializeDatabase();

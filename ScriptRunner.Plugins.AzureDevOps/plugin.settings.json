@@ -32,7 +32,7 @@
   {
     "Key": "Timeout",
     "Type": "int",
-    "DefaultValue": "30"
+    "DefaultValue": 30
   },
   {
     "Key": "DbPath",
