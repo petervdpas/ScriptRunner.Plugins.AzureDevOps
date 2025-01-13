@@ -42,7 +42,7 @@ public class DevOpsQueryService : IDevOpsQueryService
         );
 
         _database = new SqliteDatabase();
-        _database.Setup($"Data Source={_config.DbPath}");
+        _database.Setup($"Data Source={_config.DbPath};");
         InitializeDatabase();
     }
 
