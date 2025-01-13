@@ -11,7 +11,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ScriptRunner.Plugins.AzureDevOps.Interfaces;
 using ScriptRunner.Plugins.AzureDevOps.Models;
-using ScriptRunner.Plugins.Interfaces;
 using ScriptRunner.Plugins.Tools;
 
 namespace ScriptRunner.Plugins.AzureDevOps;
@@ -23,24 +22,26 @@ public class DevOpsQueryService : IDevOpsQueryService
 {
     private readonly DevOpsConfigItem _config;
     private readonly SqliteDatabase _database;
-    
+    private readonly HttpClient _httpClient;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DevOpsQueryService"/> class.
     /// </summary>
-    public DevOpsQueryService()
+    public DevOpsQueryService(IHttpClientFactory httpClientFactory)
     {
+        _httpClient = httpClientFactory.CreateClient();
         _config = DevOpsConfigHelper.GetConfiguration();
-        _database = new SqliteDatabase();
 
-        if (string.IsNullOrEmpty(_config.DbPath))
-        {
-            throw new InvalidOperationException("Database path (DbPath) is not configured.");
-        }
-        
-        Console.WriteLine($"dbPath: {_config.DbPath}");
-        
+        ValidateConfiguration();
+        ValidateDatabasePath();
+
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Basic",
+            Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_config.PersonalAccessToken}"))
+        );
+
+        _database = new SqliteDatabase();
         _database.Setup($"Data Source={_config.DbPath}");
-        
         InitializeDatabase();
     }
 
@@ -53,38 +54,27 @@ public class DevOpsQueryService : IDevOpsQueryService
     /// <inheritdoc />
     public async Task<JArray?> ExecuteQuery(string? query)
     {
-        var url = $"{_config.ApiEndpoint}/{_config.Organization}/{_config.Project}/_apis/wit/wiql?api-version=6.0";
-        var client = new HttpClient();
-
-        var authToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_config.PersonalAccessToken}"));
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authToken);
-
-        var wiql = new
+        if (string.IsNullOrWhiteSpace(query))
         {
-            query
-        };
+            throw new ArgumentException("Query cannot be null or whitespace.", nameof(query));
+        }
 
+        var url = $"{_config.ApiEndpoint}/{_config.Organization}/{_config.Project}/_apis/wit/wiql?api-version=6.0";
+        var wiql = new { query };
         var jsonContent = new StringContent(JObject.FromObject(wiql).ToString(), Encoding.UTF8, "application/json");
 
-        var response = await client.PostAsync(url, jsonContent);
-        var responseBody = await response.Content.ReadAsStringAsync();
-        
-        if (response.IsSuccessStatusCode)
+        var response = await _httpClient.PostAsync(url, jsonContent);
+        ValidateHttpResponse(response, url);
+
+        try
         {
-            try
-            {
-                var workItems = JObject.Parse(responseBody);
-                return workItems["workItems"] as JArray;
-            }
-            catch (JsonReaderException ex)
-            {
-                Console.WriteLine($"Error parsing JSON: {ex.Message}");
-                return null;
-            }
+            var responseBody = await response.Content.ReadAsStringAsync();
+            var workItems = JObject.Parse(responseBody);
+            return workItems["workItems"] as JArray;
         }
-        else
+        catch (JsonReaderException ex)
         {
-            Console.WriteLine($"HTTP error: {response.StatusCode}");
+            Console.WriteLine($"Error parsing JSON: {ex.Message}");
             return null;
         }
     }
@@ -93,58 +83,37 @@ public class DevOpsQueryService : IDevOpsQueryService
     public async Task<WorkItemViewModel?> FetchWorkItemDetails(string workItemId)
     {
         var url = $"{_config.ApiEndpoint}/{_config.Organization}/{_config.Project}/_apis/wit/workitems/{workItemId}?api-version=6.0";
-        var client = new HttpClient();
+        var response = await _httpClient.GetAsync(url);
+        ValidateHttpResponse(response, url);
 
-        var authToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_config.PersonalAccessToken}"));
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authToken);
-
-        var response = await client.GetAsync(url);
-        var responseBody = await response.Content.ReadAsStringAsync();
-        
-        if (response.IsSuccessStatusCode)
+        try
         {
-            try
+            var responseBody = await response.Content.ReadAsStringAsync();
+            var workItem = JObject.Parse(responseBody);
+            var title = workItem["fields"]?["System.Title"]?.ToString();
+            var fields = workItem["fields"]?.ToObject<Dictionary<string, object>>();
+            var htmlDescription = workItem["fields"]?["System.Description"]?.ToString();
+            var description = htmlDescription != null ? HtmlToPlainText(htmlDescription) : null;
+
+            return new WorkItemViewModel
             {
-                var workItem = JObject.Parse(responseBody);
-                var title = workItem["fields"]?["System.Title"]?.ToString();
-                var fields = workItem["fields"]?.ToObject<Dictionary<string, object>>();
-
-                var htmlDescription = workItem["fields"]?["System.Description"]?.ToString();
-
-                // Convert HTML to plain text
-                var description = htmlDescription != null ? HtmlToPlainText(htmlDescription) : null;
-
-                var workItemViewModel = new WorkItemViewModel
+                Id = workItemId,
+                Title = title,
+                Fields = fields,
+                Details = new DetailModel
                 {
-                    Id = workItemId,
-                    Title = title,
-                    Fields = fields,
-                    Details = new DetailModel
-                    {
-                        Description = description
-                    }
-                };
-
-                return workItemViewModel;
-            }
-            catch (JsonReaderException ex)
-            {
-                Console.WriteLine($"Error parsing JSON: {ex.Message}");
-                return null;
-            }
+                    Description = description
+                }
+            };
         }
-
-        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        catch (JsonReaderException ex)
         {
-            Console.WriteLine("Authorization error: Invalid PAT or insufficient permissions.");
+            Console.WriteLine($"Error parsing JSON: {ex.Message}");
             return null;
         }
-
-        Console.WriteLine($"HTTP error: {response.StatusCode}");
-        return null;
     }
     
-        /// <summary>
+    /// <summary>
     /// Adds a new saved query to the SQLite database.
     /// </summary>
     public async Task AddSavedQuery(SavedQuery query)
@@ -178,11 +147,11 @@ public class DevOpsQueryService : IDevOpsQueryService
         const string selectQuery = "SELECT Id, Name, QueryText FROM SavedQueries";
         var dataTable = _database.ExecuteQuery(selectQuery);
 
-        var savedQueries = (from DataRow row in dataTable.Rows 
+        var savedQueries = (from DataRow row in dataTable.Rows
             select new SavedQuery
             {
-                Id = Guid.Parse(row["Id"].ToString() ?? string.Empty), 
-                Name = row["Name"].ToString(), 
+                Id = Guid.Parse(row["Id"].ToString() ?? string.Empty),
+                Name = row["Name"].ToString(),
                 QueryText = row["QueryText"].ToString()
             }).ToList();
 
@@ -324,5 +293,43 @@ public class DevOpsQueryService : IDevOpsQueryService
                                         """;
         _database.ExecuteNonQuery(createTableQuery);
         _database.CloseConnection();
+    }
+    
+    /// <summary>
+    /// Validates the essential configuration properties.
+    /// </summary>
+    private void ValidateConfiguration()
+    {
+        if (string.IsNullOrWhiteSpace(_config.ApiEndpoint))
+            throw new InvalidOperationException("API Endpoint is not configured.");
+        if (string.IsNullOrWhiteSpace(_config.Organization))
+            throw new InvalidOperationException("Organization is not configured.");
+        if (string.IsNullOrWhiteSpace(_config.Project))
+            throw new InvalidOperationException("Project is not configured.");
+        if (string.IsNullOrWhiteSpace(_config.PersonalAccessToken))
+            throw new InvalidOperationException("Personal Access Token (PAT) is not configured.");
+    }
+
+    /// <summary>
+    /// Validates the HTTP response and logs an appropriate message.
+    /// </summary>
+    private static void ValidateHttpResponse(HttpResponseMessage response, string url)
+    {
+        if (response.IsSuccessStatusCode) return;
+        
+        var error = $"HTTP request failed with status code {response.StatusCode} for URL: {url}";
+        Console.WriteLine(error);
+        throw new HttpRequestException(error);
+    }
+
+    /// <summary>
+    /// Validates the database path.
+    /// </summary>
+    private void ValidateDatabasePath()
+    {
+        if (string.IsNullOrWhiteSpace(_config.DbPath))
+            throw new InvalidOperationException("Database path (DbPath) is not configured.");
+        if (!System.IO.Path.IsPathRooted(_config.DbPath))
+            throw new InvalidOperationException($"Database path is not a valid absolute path: {_config.DbPath}");
     }
 }

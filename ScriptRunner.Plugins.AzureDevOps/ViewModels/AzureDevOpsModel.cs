@@ -132,39 +132,65 @@ public class AzureDevOpsModel : ReactiveObject
     {
         WorkItems.Clear();
 
-        if (CurrentQuery == null) return;
-
-        var query = _queryService.ReplaceAreaPath(CurrentQuery.QueryText);
-        if (query != null)
+        if (CurrentQuery == null || string.IsNullOrWhiteSpace(CurrentQuery.QueryText))
         {
+            Console.WriteLine("Current query is null or empty.");
+            return;
+        }
+
+        try
+        {
+            var query = _queryService.ReplaceAreaPath(CurrentQuery.QueryText);
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                Console.WriteLine("Query replacement failed or resulted in an empty string.");
+                return;
+            }
+
             var workItemsArray = await _queryService.ExecuteQuery(query);
 
-            if (workItemsArray != null)
+            if (workItemsArray == null)
             {
-                foreach (var workItem in workItemsArray)
+                Console.WriteLine("No work items returned from the query execution.");
+                WorkItems.Add(new WorkItemViewModel { Id = "Error", Title = "No work items found" });
+                return;
+            }
+
+            foreach (var workItem in workItemsArray)
+            {
+                var workItemId = workItem["id"]?.ToString();
+                if (string.IsNullOrWhiteSpace(workItemId)) continue;
+
+                try
                 {
-                    var workItemId = workItem["id"]?.ToString();
-                    if (workItemId == null) continue;
-
                     var workItemDetails = await _queryService.FetchWorkItemDetails(workItemId);
-
                     WorkItems.Add(workItemDetails ?? new WorkItemViewModel
                     {
                         Id = workItemId,
                         Title = "Error fetching details"
                     });
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error fetching work item details for ID {workItemId}: {ex.Message}");
+                    WorkItems.Add(new WorkItemViewModel
+                    {
+                        Id = workItemId,
+                        Title = "Error fetching details"
+                    });
+                }
             }
-            else
+
+            if (WorkItems.Count > 0)
             {
-                WorkItems.Add(new WorkItemViewModel { Id = "Error", Title = "Error executing query" });
+                SelectedItem = WorkItems[0];
+                SelectedTabIndex = 1; // Switch to WorkItems Tab
             }
         }
-
-        if (WorkItems.Count > 0)
+        catch (Exception ex)
         {
-            SelectedItem = WorkItems[0];
-            SelectedTabIndex = 1; // Switch to WorkItems Tab
+            Console.WriteLine($"Error executing query: {ex.Message}");
+            WorkItems.Add(new WorkItemViewModel { Id = "Error", Title = "Error executing query" });
         }
     }
 
@@ -173,22 +199,39 @@ public class AzureDevOpsModel : ReactiveObject
     /// </summary>
     private async Task SaveQuery()
     {
-        if (CurrentQuery == null || string.IsNullOrWhiteSpace(CurrentQuery.Name)) return;
-
-        var existingQuery = SavedQueries.FirstOrDefault(q => q?.Name == CurrentQuery.Name);
-        if (existingQuery != null)
+        if (CurrentQuery == null)
         {
-            Console.WriteLine("A query with this name already exists. Please change the name and try again.");
+            Console.WriteLine("No current query to save.");
             return;
         }
 
-        await _queryService.AddSavedQuery(CurrentQuery);
-        SavedQueries.Add(new SavedQuery
+        if (string.IsNullOrWhiteSpace(CurrentQuery.Name) || string.IsNullOrWhiteSpace(CurrentQuery.QueryText))
         {
-            Id = CurrentQuery.Id,
-            Name = CurrentQuery.Name,
-            QueryText = CurrentQuery.QueryText
-        });
+            Console.WriteLine("Query name or text cannot be empty.");
+            return;
+        }
+
+        if (SavedQueries.Any(q => q?.Name == CurrentQuery.Name))
+        {
+            Console.WriteLine("A query with this name already exists. Please use a different name.");
+            return;
+        }
+
+        try
+        {
+            await _queryService.AddSavedQuery(CurrentQuery);
+            SavedQueries.Add(new SavedQuery
+            {
+                Id = CurrentQuery.Id,
+                Name = CurrentQuery.Name,
+                QueryText = CurrentQuery.QueryText
+            });
+            Console.WriteLine($"Query '{CurrentQuery.Name}' saved successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving query: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -196,10 +239,22 @@ public class AzureDevOpsModel : ReactiveObject
     /// </summary>
     private async Task DeleteQuery()
     {
-        if (SelectedSavedQuery == null) return;
+        if (SelectedSavedQuery == null)
+        {
+            Console.WriteLine("No query selected to delete.");
+            return;
+        }
 
-        await _queryService.DeleteSavedQuery(SelectedSavedQuery.Id);
-        SavedQueries.Remove(SelectedSavedQuery);
+        try
+        {
+            await _queryService.DeleteSavedQuery(SelectedSavedQuery.Id);
+            SavedQueries.Remove(SelectedSavedQuery);
+            Console.WriteLine($"Query '{SelectedSavedQuery.Name}' deleted successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting query: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -209,10 +264,18 @@ public class AzureDevOpsModel : ReactiveObject
     {
         SavedQueries.Clear();
 
-        var queries = await _queryService.GetSavedQueries();
-        foreach (var query in queries)
+        try
         {
-            SavedQueries.Add(query);
+            var queries = await _queryService.GetSavedQueries();
+            foreach (var query in queries)
+            {
+                SavedQueries.Add(query);
+            }
+            Console.WriteLine("Saved queries loaded successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading saved queries: {ex.Message}");
         }
     }
     
