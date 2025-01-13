@@ -1,4 +1,5 @@
-﻿using ScriptRunner.Plugins.AzureDevOps.Models;
+﻿using System;
+using ScriptRunner.Plugins.AzureDevOps.Models;
 using ScriptRunner.Plugins.Utilities;
 
 namespace ScriptRunner.Plugins.AzureDevOps;
@@ -14,6 +15,10 @@ public static class DevOpsConfigHelper
     /// <returns>A <see cref="DevOpsConfigItem"/> containing the configuration settings.</returns>
     public static DevOpsConfigItem GetConfiguration()
     {
+        var dbPath = PluginSettingsHelper.RetrieveSetting<string>("DbPath");
+        
+        Console.WriteLine($"dbPath: {dbPath}");
+        
         return new DevOpsConfigItem
         {
             Organization = PluginSettingsHelper.RetrieveSetting<string>("Organization"),
