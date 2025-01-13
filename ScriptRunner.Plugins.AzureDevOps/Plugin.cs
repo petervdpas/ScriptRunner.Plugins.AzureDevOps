@@ -23,7 +23,7 @@ namespace ScriptRunner.Plugins.AzureDevOps;
     "1.0.0",
     PluginSystemConstants.CurrentPluginSystemVersion,
     PluginSystemConstants.CurrentFrameworkVersion,
-    services: ["IDevOpsConfigService", "IDevOpsQueryService", "IAzureDevOpsDialogService"])]
+    services: ["IDevOpsQueryService", "IAzureDevOpsDialogService"])]
 public class Plugin : BaseAsyncServicePlugin
 {
     /// <summary>
@@ -37,18 +37,11 @@ public class Plugin : BaseAsyncServicePlugin
     /// <param name="configuration">A dictionary containing configuration key-value pairs for the plugin.</param>
     public override async Task InitializeAsync(IEnumerable<PluginSettingDefinition> configuration)
     {
-        if (LocalStorage == null)
-        {
-            throw new InvalidOperationException(
-                "LocalStorage has not been initialized. " +
-                "Ensure the host injects LocalStorage before calling InitializeAsync.");
-        }
-        
         // Store settings into LocalStorage
-        PluginSettingsHelper.StoreSettings(LocalStorage, configuration);
-
+        PluginSettingsHelper.StoreSettings(configuration);
+        
         // Optionally display the settings
-        PluginSettingsHelper.DisplayStoredSettings(LocalStorage);
+        PluginSettingsHelper.DisplayStoredSettings();
         
         await Task.CompletedTask;
     }
@@ -62,31 +55,8 @@ public class Plugin : BaseAsyncServicePlugin
         // Simulate async service registration (e.g., initializing an external resource)
         await Task.Delay(50);
         
-        if (LocalStorage == null)
-        {
-            throw new InvalidOperationException(
-                "LocalStorage has not been initialized. " +
-                "Ensure the host injects LocalStorage before calling InitializeAsync.");
-        }
-        
-        // Register the service
-        services.AddSingleton<IDevOpsConfigService>(_ => new DevOpsConfigService(LocalStorage));
-        
-        // Register ISqliteDatabase with the plugin's DbPath
-        var dbPath = PluginSettingsHelper.RetrieveSetting<string>(LocalStorage, "DbPath");
-        if (string.IsNullOrEmpty(dbPath))
-        {
-            throw new InvalidOperationException("DbPath is not configured in LocalStorage.");
-        }
-        var sqliteDatabase = new SqliteDatabase();
-        sqliteDatabase.Setup($"Data Source={dbPath}");
-
         // Register QueryService
-        services.AddSingleton<IDevOpsQueryService>(provider =>
-        {
-            var configService = provider.GetRequiredService<IDevOpsConfigService>();
-            return new DevOpsQueryService(configService, sqliteDatabase);
-        });
+        services.AddSingleton<IDevOpsQueryService, DevOpsQueryService>();
         
         services.AddSingleton<IAzureDevOpsDialogService>(sp =>
             new AzureDevOpsDialogService(sp.GetRequiredService<IDevOpsQueryService>()));
@@ -100,7 +70,7 @@ public class Plugin : BaseAsyncServicePlugin
         // Example execution logic
         await Task.Delay(50);
         
-        var storedSetting = PluginSettingsHelper.RetrieveSetting<string>(LocalStorage, "PluginName");
+        var storedSetting = PluginSettingsHelper.RetrieveSetting<string>("PluginName");
         Console.WriteLine($"Retrieved PluginName: {storedSetting}");
     }
 }

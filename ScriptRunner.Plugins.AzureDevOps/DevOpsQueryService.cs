@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using ScriptRunner.Plugins.AzureDevOps.Interfaces;
 using ScriptRunner.Plugins.AzureDevOps.Models;
 using ScriptRunner.Plugins.Interfaces;
+using ScriptRunner.Plugins.Tools;
 
 namespace ScriptRunner.Plugins.AzureDevOps;
 
@@ -21,24 +22,23 @@ namespace ScriptRunner.Plugins.AzureDevOps;
 public class DevOpsQueryService : IDevOpsQueryService
 {
     private readonly DevOpsConfigItem _config;
-    private readonly ISqliteDatabase _database;
+    private readonly SqliteDatabase _database;
     
     /// <summary>
     /// Initializes a new instance of the <see cref="DevOpsQueryService"/> class.
     /// </summary>
-    /// <param name="configService">The configuration service for retrieving Azure DevOps settings.</param>
-    /// <param name="database">The SQLite database for persisting saved queries.</param>
-    public DevOpsQueryService(IDevOpsConfigService configService, ISqliteDatabase database)
+    public DevOpsQueryService()
     {
-        _config = configService.GetConfiguration();
-        _database = database ?? throw new ArgumentNullException(nameof(database));
+        _config = DevOpsConfigHelper.GetConfiguration();
+        _database = new SqliteDatabase();
 
         if (string.IsNullOrEmpty(_config.DbPath))
         {
             throw new InvalidOperationException("Database path (DbPath) is not configured.");
         }
-
+        
         _database.Setup($"Data Source={_config.DbPath}");
+        
         InitializeDatabase();
     }
 
