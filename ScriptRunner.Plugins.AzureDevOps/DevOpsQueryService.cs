@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -330,22 +329,7 @@ public class DevOpsQueryService : IDevOpsQueryService
     {
         if (string.IsNullOrWhiteSpace(_config.DbPath))
             throw new InvalidOperationException("Database path (DbPath) is not configured.");
-
-        // If the path is not absolute, treat it as relative to the application's base directory
-        if (!Path.IsPathRooted(_config.DbPath))
-        {
-            var defaultScriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ScriptRunnerScripts");
-            _config.DbPath = Path.Combine(defaultScriptPath, _config.DbPath);
-        }
-
-        // Ensure the directory exists or create it
-        var directory = Path.GetDirectoryName(_config.DbPath);
-        if (directory == null)
-            throw new InvalidOperationException($"Invalid database path: {_config.DbPath}");
-
-        if (Directory.Exists(directory)) return;
-        
-        Console.WriteLine($"Directory does not exist. Creating: {directory}");
-        Directory.CreateDirectory(directory);
+        if (!System.IO.Path.IsPathRooted(_config.DbPath))
+            throw new InvalidOperationException($"Database path is not a valid absolute path: {_config.DbPath}");
     }
 }
