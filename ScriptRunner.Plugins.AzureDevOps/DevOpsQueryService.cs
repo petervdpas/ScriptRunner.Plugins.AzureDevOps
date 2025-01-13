@@ -27,9 +27,9 @@ public class DevOpsQueryService : IDevOpsQueryService
     /// <summary>
     /// Initializes a new instance of the <see cref="DevOpsQueryService"/> class.
     /// </summary>
-    public DevOpsQueryService(IHttpClientFactory httpClientFactory)
+    public DevOpsQueryService()
     {
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = new HttpClient();
         _config = DevOpsConfigHelper.GetConfiguration();
 
         ValidateConfiguration();

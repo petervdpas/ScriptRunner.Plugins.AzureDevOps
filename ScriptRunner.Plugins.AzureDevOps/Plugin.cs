@@ -55,8 +55,6 @@ public class Plugin : BaseAsyncServicePlugin
         // Simulate async service registration (e.g., initializing an external resource)
         await Task.Delay(50);
         
-        services.AddHttpClient();
-        
         // Register QueryService
         services.AddSingleton<IDevOpsQueryService, DevOpsQueryService>();
         
