@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -329,7 +330,7 @@ public class DevOpsQueryService : IDevOpsQueryService
     {
         if (string.IsNullOrWhiteSpace(_config.DbPath))
             throw new InvalidOperationException("Database path (DbPath) is not configured.");
-        if (!System.IO.Path.IsPathRooted(_config.DbPath))
+        if (!Path.IsPathRooted(_config.DbPath))
             throw new InvalidOperationException($"Database path is not a valid absolute path: {_config.DbPath}");
     }
 }
