@@ -11,9 +11,9 @@
 
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.1" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="ScriptRunner.Plugins" Version="1.8.30" />
+        <PackageReference Include="ScriptRunner.Plugins" Version="1.8.32" />
     </ItemGroup>
 
     <ItemGroup>
