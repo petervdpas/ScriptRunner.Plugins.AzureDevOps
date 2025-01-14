@@ -42,7 +42,7 @@ public class Plugin : BaseAsyncServicePlugin
         
         // Optionally display the settings
         PluginSettingsHelper.DisplayStoredSettings();
-        
+
         await Task.CompletedTask;
     }
 
