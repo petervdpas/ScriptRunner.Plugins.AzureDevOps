@@ -331,7 +331,5 @@ public class DevOpsQueryService : IDevOpsQueryService
     {
         if (string.IsNullOrWhiteSpace(_config.DbPath))
             throw new InvalidOperationException("Database path (DbPath) is not configured.");
-        if (!Path.IsPathRooted(_config.DbPath))
-            throw new InvalidOperationException($"Database path is not a valid absolute path: {_config.DbPath}");
     }
 }
