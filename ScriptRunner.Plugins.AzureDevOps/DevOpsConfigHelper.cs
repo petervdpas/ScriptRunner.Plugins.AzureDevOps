@@ -1,5 +1,4 @@
-﻿using System;
-using ScriptRunner.Plugins.AzureDevOps.Models;
+﻿using ScriptRunner.Plugins.AzureDevOps.Models;
 using ScriptRunner.Plugins.Utilities;
 
 namespace ScriptRunner.Plugins.AzureDevOps;
@@ -17,13 +16,13 @@ public static class DevOpsConfigHelper
     {
         return new DevOpsConfigItem
         {
-            Organization = PluginSettingsHelper.RetrieveSetting<string>("Organization"),
-            Project = PluginSettingsHelper.RetrieveSetting<string>("Project"),
-            PersonalAccessToken = PluginSettingsHelper.RetrieveSetting<string>("PersonalAccessToken"),
-            AreaPath = PluginSettingsHelper.RetrieveSetting<string>("AreaPath"),
-            ApiEndpoint = PluginSettingsHelper.RetrieveSetting<string>("ApiEndpoint"),
+            Organization = PluginSettingsHelper.RetrieveSetting<string>("Organization", true),
+            Project = PluginSettingsHelper.RetrieveSetting<string>("Project", true),
+            PersonalAccessToken = PluginSettingsHelper.RetrieveSetting<string>("PersonalAccessToken", true),
+            AreaPath = PluginSettingsHelper.RetrieveSetting<string>("AreaPath", true),
+            ApiEndpoint = PluginSettingsHelper.RetrieveSetting<string>("ApiEndpoint", true),
             Timeout = PluginSettingsHelper.RetrieveSetting<int>("Timeout"),
-            DbPath = PluginSettingsHelper.RetrieveSetting<string>("DbPath")
+            DbPath = PluginSettingsHelper.RetrieveSetting<string>("DbPath", true)
         };
     }
 }
