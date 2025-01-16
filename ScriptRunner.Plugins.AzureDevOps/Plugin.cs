@@ -23,7 +23,7 @@ namespace ScriptRunner.Plugins.AzureDevOps;
     "1.0.0",
     PluginSystemConstants.CurrentPluginSystemVersion,
     PluginSystemConstants.CurrentFrameworkVersion,
-    services: ["IDevOpsQueryService", "IAzureDevOpsDialogService"])]
+    services: ["IDevOpsQueryService", "IAzureDevOpsDialogService", "IDragDropDemo"])]
 public class Plugin : BaseAsyncServicePlugin
 {
     /// <summary>
@@ -60,6 +60,8 @@ public class Plugin : BaseAsyncServicePlugin
         
         services.AddSingleton<IAzureDevOpsDialogService>(sp =>
             new AzureDevOpsDialogService(sp.GetRequiredService<IDevOpsQueryService>()));
+        
+        services.AddSingleton<IDragDropDemo, DragDropDemo>();
     }
     
     /// <summary>

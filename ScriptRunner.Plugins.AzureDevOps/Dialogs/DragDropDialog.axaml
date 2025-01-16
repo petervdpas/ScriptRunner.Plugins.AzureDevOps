@@ -1,0 +1,51 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ScriptRunner.Plugins.AzureDevOps.ViewModels"
+        xmlns:behaviors="using:Avalonia.Xaml.Interactivity"
+        xmlns:local="using:ScriptRunner.Plugins.AzureDevOps.Behaviors"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:DragDropDialogModel, IsDesignTimeCreatable=True}"
+        x:Class="ScriptRunner.Plugins.AzureDevOps.Dialogs.DragDropDialog"
+        Title="Drag Drop"
+        Width="800"
+        Height="600"
+        Icon="avares://ScriptRunner/Assets/hacker.ico"
+        WindowStartupLocation="CenterScreen"
+        x:DataType="vm:DragDropDialogModel">
+        
+        <Grid ColumnDefinitions="1*,2*" RowDefinitions="*">
+                <!-- Left Side: List of Items -->
+                <ListBox x:Name="ItemListBox" Grid.Column="0" ItemsSource="{Binding Items}">
+                        <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                        <TextBlock Text="{Binding}" Padding="10" Background="LightGray">
+                                                <behaviors:Interaction.Behaviors>
+                                                        <local:DragBehavior DragData="{Binding}" />
+                                                </behaviors:Interaction.Behaviors>
+                                        </TextBlock>
+                                </DataTemplate>
+                        </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Right Side: 4x4 Grid -->
+                <ItemsControl x:Name="GridItemsControl" Grid.Column="1" ItemsSource="{Binding GridItems}">
+                        <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                        <UniformGrid Rows="4" Columns="4" />
+                                </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                        <Border BorderBrush="Black" BorderThickness="1" Background="White">
+                                                <behaviors:Interaction.Behaviors>
+                                                        <local:DropBehavior DroppedData="{Binding}" />
+                                                </behaviors:Interaction.Behaviors>
+                                                <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                </ItemsControl>
+        </Grid>
+</Window>
