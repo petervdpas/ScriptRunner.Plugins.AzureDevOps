@@ -15,9 +15,10 @@
         WindowStartupLocation="CenterScreen"
         x:DataType="vm:DragDropDialogModel">
         
-        <Grid ColumnDefinitions="1*,2*" RowDefinitions="*">
+        <Grid RowDefinitions="Auto, *" ColumnDefinitions="1*,2*">
+                
                 <!-- Left Side: List of Items -->
-                <ListBox x:Name="ItemListBox" Grid.Column="0" ItemsSource="{Binding Items}">
+                <ListBox x:Name="ItemListBox" Grid.Row="0" Grid.Column="0"  ItemsSource="{Binding Items}">
                         <ListBox.ItemTemplate>
                                 <DataTemplate>
                                         <TextBlock Text="{Binding}" Padding="10" Background="LightGray">
@@ -30,7 +31,7 @@
                 </ListBox>
 
                 <!-- Right Side: 4x4 Grid -->
-                <ItemsControl x:Name="GridItemsControl" Grid.Column="1" ItemsSource="{Binding GridItems}">
+                <ItemsControl x:Name="GridItemsControl" Grid.Row="0" Grid.Column="1" ItemsSource="{Binding GridItems, Mode=TwoWay}">
                         <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                         <UniformGrid Rows="4" Columns="4" />
@@ -38,7 +39,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                        <Border BorderBrush="Black" BorderThickness="1" Background="White">
+                                        <Border BorderBrush="Black" BorderThickness="1" Background="White" Focusable="True">
                                                 <behaviors:Interaction.Behaviors>
                                                         <local:DropBehavior DroppedData="{Binding}" />
                                                 </behaviors:Interaction.Behaviors>
@@ -47,5 +48,15 @@
                                 </DataTemplate>
                         </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                
+                <!-- Testable Drop Spot -->
+                <Border  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="Black" 
+                        BorderThickness="1" Background="LightGray" Height="100" Focusable="True">
+                        <behaviors:Interaction.Behaviors>
+                                <local:DropBehavior />
+                        </behaviors:Interaction.Behaviors>
+                        <TextBlock Text="Drop Here (Test Spot)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
         </Grid>
+        
 </Window>

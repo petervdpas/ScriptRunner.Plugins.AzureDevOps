@@ -57,9 +57,11 @@ public class DragDropDemo : IDragDropDemo
         // Log dialog initialization
         _logger?.Information($"Initializing DragDropDialog with title: {title}, width: {width}, height: {height}");
 
-        // Attach behaviors after the dialog has loaded
-        dialog.Opened += (_, _) =>
+        // Attach behaviors once the dialog is opened
+        dialog.Opened += async (_, _) =>
         {
+            _logger?.Information("Dialog opened. Attaching behaviors after delay...");
+            await Task.Delay(50); // Add a slight delay to ensure the layout is complete
             AttachBehaviors(dialog, _logger);
         };
         
@@ -75,7 +77,7 @@ public class DragDropDemo : IDragDropDemo
     private static void AttachBehaviors(DragDropDialog dialog, IPluginLogger? logger)
     {
         logger?.Information("Attaching behaviors...");
-        
+
         // Attach DragBehavior to ListBox items
         var listBox = dialog.FindControl<ListBox>("ItemListBox");
         if (listBox is not null)
@@ -83,23 +85,16 @@ public class DragDropDemo : IDragDropDemo
             logger?.Information("Found ListBox. Attaching DragBehavior...");
             for (var i = 0; i < listBox.ItemCount; i++)
             {
-                var item = listBox.Items.ElementAtOrDefault(i);
-                if (item == null)
-                {
-                    logger?.Warning($"Item at index {i} is null.");
-                    continue;
-                }
-
                 var container = listBox.ContainerFromIndex(i);
                 if (container is null)
                 {
-                    logger?.Warning($"No container found for ListBox item at index {i}.");
+                    logger?.Warning($"No container found for ListBox item at index {i}. Retrying...");
                     continue;
                 }
 
                 var dragBehavior = new DragBehavior();
                 dragBehavior.SetLogger(logger); // Set logger
-                dragBehavior.DragData = item; // Assign data context
+                dragBehavior.DragData = listBox.Items.ElementAt(i); // Assign data context
                 Interaction.GetBehaviors(container).Add(dragBehavior);
                 logger?.Information($"DragBehavior attached to ListBox item at index {i}.");
             }
@@ -116,17 +111,10 @@ public class DragDropDemo : IDragDropDemo
             logger?.Information("Found ItemsControl. Attaching DropBehavior...");
             for (var i = 0; i < itemsControl.ItemCount; i++)
             {
-                var item = itemsControl.Items.ElementAtOrDefault(i);
-                if (item == null)
-                {
-                    logger?.Warning($"Item at index {i} in ItemsControl is null.");
-                    continue;
-                }
-
                 var container = itemsControl.ContainerFromIndex(i);
                 if (container is null)
                 {
-                    logger?.Warning($"No container found for ItemsControl item at index {i}.");
+                    logger?.Warning($"No container found for ItemsControl cell at index {i}. Retrying...");
                     continue;
                 }
 

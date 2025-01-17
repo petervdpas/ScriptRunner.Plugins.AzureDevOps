@@ -13,34 +13,12 @@ namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
 public class DragBehavior : Behavior<Control>
 {
     private IPluginLogger? _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DragBehavior"/> class.
-    /// </summary>
-    /// <param name="logger">
-    /// An optional logger instance implementing <see cref="IPluginLogger"/> used to log drag-and-drop events.
-    /// If no logger is provided, logging will be disabled.
-    /// </param>
-    public DragBehavior(IPluginLogger? logger = null)
-    {
-        _logger = logger;
-    }
-    
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DragBehavior"/> class.
-    /// </summary>
-    public DragBehavior()
-    {
-    }
     
     /// <summary>
     /// Sets the logger for drag-and-drop events.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public void SetLogger(IPluginLogger? logger = null)
-    {
-        _logger = logger;
-    }
+    public void SetLogger(IPluginLogger? logger) => _logger = logger;
 
     /// <summary>
     /// Defines the <see cref="DragData"/> property that stores the data to be dragged.

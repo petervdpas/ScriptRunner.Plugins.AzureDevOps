@@ -32,11 +32,11 @@ public class DragDropDialogModel : ReactiveObject
     /// <remarks>
     /// The grid is represented as a 4x4 collection of strings. Each cell in the grid can hold a dropped item.
     /// </remarks>
-    public ObservableCollection<string?> GridItems { get; } =
+    public ObservableCollection<string?> GridItems { get; set; } =
     [
-        null, null, null, null,
-        null, null, null, null,
-        null, null, null, null,
-        null, null, null, null
+        "Item A", "Item B", "Item C", "Item D",
+        "Item E", "Item F", "Item G", "Item H",
+        "Item I", "Item J", "Item K", "Item L",
+        "Item M", "Item N", "Item O", "Item P"
     ];
 }

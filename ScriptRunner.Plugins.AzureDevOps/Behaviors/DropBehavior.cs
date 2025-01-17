@@ -13,34 +13,12 @@ namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
 public class DropBehavior : Behavior<Control>
 {
     private IPluginLogger? _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DropBehavior"/> class.
-    /// </summary>
-    /// <param name="logger">
-    /// An optional logger instance implementing <see cref="IPluginLogger"/> used to log drag-and-drop events.
-    /// If no logger is provided, logging will be disabled.
-    /// </param>
-    public DropBehavior(IPluginLogger? logger = null)
-    {
-        _logger = logger;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DropBehavior"/> class.
-    /// </summary>
-    public DropBehavior()
-    {
-    }
     
     /// <summary>
     /// Sets the logger for drag-and-drop events.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public void SetLogger(IPluginLogger? logger = null)
-    {
-        _logger = logger;
-    }
+    public void SetLogger(IPluginLogger? logger) => _logger = logger;
     
     /// <summary>
     /// Defines the <see cref="DroppedData"/> property that stores the data dropped onto the control.
@@ -63,7 +41,11 @@ public class DropBehavior : Behavior<Control>
     protected override void OnAttached()
     {
         base.OnAttached();
-        if (AssociatedObject == null) return;
+        if (AssociatedObject == null)
+        {
+            _logger?.Warning("DropBehavior: AssociatedObject is null.");
+            return;
+        }
         
         _logger?.Information($"DropBehavior attached to {AssociatedObject}");
         AssociatedObject.AddHandler(DragDrop.DragOverEvent, OnDragOver, RoutingStrategies.Tunnel);
@@ -85,6 +67,8 @@ public class DropBehavior : Behavior<Control>
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
+        _logger?.Information($"DragOver on {AssociatedObject}");
+
         if (e.Data.Contains(DataFormats.Text))
         {
             _logger?.Information("DragOver: valid data detected.");
@@ -94,6 +78,8 @@ public class DropBehavior : Behavior<Control>
         else
         {
             _logger?.Warning("DragOver: no valid data detected.");
+            e.DragEffects = DragDropEffects.None; // Reject invalid data
+            e.Handled = true;
         }
     }
 
@@ -108,7 +94,8 @@ public class DropBehavior : Behavior<Control>
         }
         else
         {
-            _logger?.Warning("No valid data found in drop event.");
+            _logger?.Warning("Drop: no valid data found.");
+            e.Handled = true; // Mark as handled to prevent bubbling
         }
     }
 }
