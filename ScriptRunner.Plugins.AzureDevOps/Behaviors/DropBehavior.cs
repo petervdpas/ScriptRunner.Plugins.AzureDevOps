@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Xaml.Interactivity;
 using ScriptRunner.Plugins.AzureDevOps.ViewModels;
 using ScriptRunner.Plugins.Logging;
@@ -55,8 +55,16 @@ public class DropBehavior : Behavior<Control>
             return;
         }
         
-        AssociatedObject.AddHandler(DragDrop.DragOverEvent, OnDragOver, RoutingStrategies.Tunnel);
-        AssociatedObject.AddHandler(DragDrop.DropEvent, OnDrop, RoutingStrategies.Tunnel);
+        AssociatedObject.SetValue(DragDrop.AllowDropProperty, true);
+        
+        AssociatedObject.AddHandler(
+            DragDrop.DragOverEvent, 
+            OnDragOver, 
+            RoutingStrategies.Bubble);
+        AssociatedObject.AddHandler(
+            DragDrop.DropEvent, 
+            OnDrop, 
+            RoutingStrategies.Bubble);
     }
 
     /// <summary>
@@ -77,13 +85,17 @@ public class DropBehavior : Behavior<Control>
 
         if (e.Data.Contains(DataFormats.Text))
         {
-            _logger?.Information("DragOver: valid data detected.");
             e.DragEffects = DragDropEffects.Copy | DragDropEffects.Move;
             e.Handled = true;
+
+            // Optional: Highlight the drop zone
+            if (AssociatedObject is Panel panel)
+            {
+                panel.Background = Brushes.LightBlue; // Example of visual feedback
+            }
         }
         else
         {
-            _logger?.Warning("DragOver: no valid data detected.");
             e.DragEffects = DragDropEffects.None;
             e.Handled = true;
         }
@@ -91,36 +103,40 @@ public class DropBehavior : Behavior<Control>
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
-        _logger?.Information($"Drop event triggered on {AssociatedObject}.");
-
         if (e.Data.Contains(DataFormats.Text))
         {
             var droppedText = e.Data.GetText();
-            DroppedData = droppedText;
-            _logger?.Information($"Data dropped successfully: {droppedText}");
-            e.Handled = true;
-
-            // Access the GridItems collection from the ItemsControl's DataContext
-            if (AssociatedObject?.Parent is ItemsControl { DataContext: DragDropDialogModel viewModel } parentControl)
+            if (string.IsNullOrEmpty(droppedText))
             {
-                // Get the index of the target cell using ItemsControl.IndexFromContainer
-                var index = parentControl.IndexFromContainer(AssociatedObject);
+                _logger?.Warning("Dropped data is empty.");
+                return;
+            }
 
-                // Update the GridItems collection
+            if (AssociatedObject?.Parent is ItemsControl
+                {
+                    DataContext: DragDropDialogModel viewModel
+                } parentControl)
+            {
+                var index = parentControl.IndexFromContainer(AssociatedObject);
                 if (index >= 0 && index < viewModel.GridItems.Count)
                 {
-                    _logger?.Information($"Updating GridItems at index {index} with {droppedText}.");
                     viewModel.GridItems[index] = droppedText;
                 }
             }
 
-            // Notify subscribers about the completed drop
-            DropCompleted?.Invoke(this, DroppedData);
+            // Raise the event after successfully handling the drop
+            DropCompleted?.Invoke(this, droppedText);
         }
         else
         {
-            _logger?.Warning("Drop: no valid data found.");
-            e.Handled = true; // Mark as handled to prevent bubbling
+            _logger?.Warning("Drop: invalid data format.");
+        }
+
+        // Reset background
+        if (AssociatedObject is Panel panel)
+        {
+            panel.Background = Brushes.White;
         }
     }
+    
 }

@@ -13,30 +13,23 @@ namespace ScriptRunner.Plugins.AzureDevOps.ViewModels;
 public class DragDropDialogModel : ReactiveObject
 {
     /// <summary>
-    /// Gets the collection of items available for dragging.
+    /// Items
     /// </summary>
-    /// <remarks>
-    /// These items represent the source data that users can drag to the grid.
-    /// </remarks>
-    public ObservableCollection<string> Items { get; } =
-    [
-        "Item 1",
-        "Item 2",
-        "Item 3",
-        "Item 4"
-    ];
-
+    public ObservableCollection<string> Items { get; set; }
+    
     /// <summary>
-    /// Gets the collection of grid items where dragged items can be dropped.
+    /// GridItems
     /// </summary>
-    /// <remarks>
-    /// The grid is represented as a 4x4 collection of strings. Each cell in the grid can hold a dropped item.
-    /// </remarks>
-    public ObservableCollection<string?> GridItems { get; set; } =
-    [
-        "Item A", "Item B", "Item C", "Item D",
-        "Item E", "Item F", "Item G", "Item H",
-        "Item I", "Item J", "Item K", "Item L",
-        "Item M", "Item N", "Item O", "Item P"
-    ];
+    public ObservableCollection<string?> GridItems { get; set; }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DragDropDialogModel"/> class. 
+    /// Sets up the <see cref="GridItems"/> collection with 16 empty slots, representing a 4x4 grid.
+    /// </summary>
+    public DragDropDialogModel()
+    {
+        Items = ["Item 1", "Item 2", "Item 3", "Item 4"];
+        // Initialize 4x4 grid with empty slots
+        GridItems = new ObservableCollection<string?>(new string?[16]);
+    }
 }

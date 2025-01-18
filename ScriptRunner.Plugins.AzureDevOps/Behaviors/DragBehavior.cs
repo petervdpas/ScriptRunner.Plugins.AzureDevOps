@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -15,7 +16,8 @@ public class DragBehavior : Behavior<Control>
 {
     private IPluginLogger? _logger;
     private double _originalOpacity;
-    
+    private bool _isDragging;
+
     /// <summary>
     /// Sets the logger for drag-and-drop events.
     /// </summary>
@@ -45,8 +47,14 @@ public class DragBehavior : Behavior<Control>
         base.OnAttached();
         if (AssociatedObject == null) return;
         
-        AssociatedObject.AddHandler(InputElement.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
-        AssociatedObject.AddHandler(InputElement.PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel);
+        AssociatedObject.AddHandler(
+            InputElement.PointerPressedEvent, 
+            OnPointerPressed, 
+            RoutingStrategies.Tunnel);
+        AssociatedObject.AddHandler(
+            InputElement.PointerReleasedEvent, 
+            OnPointerReleased, 
+            RoutingStrategies.Tunnel);
     }
 
     /// <summary>
@@ -57,54 +65,68 @@ public class DragBehavior : Behavior<Control>
         base.OnDetaching();
         if (AssociatedObject == null) return;
         
-        AssociatedObject.RemoveHandler(InputElement.PointerPressedEvent, OnPointerPressed);
-        AssociatedObject.RemoveHandler(InputElement.PointerReleasedEvent, OnPointerReleased);
+        AssociatedObject.RemoveHandler(
+            InputElement.PointerPressedEvent, 
+            OnPointerPressed);
+        AssociatedObject.RemoveHandler(
+            InputElement.PointerReleasedEvent, 
+            OnPointerReleased);
     }
-
-    /// <summary>
-    /// Handles the PointerPressed event to start the drag operation.
-    /// </summary>
-    /// <param name="sender">The event sender.</param>
-    /// <param name="e">Pointer pressed event arguments.</param>
-    private async Task OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    
+    private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (DragData == null || AssociatedObject == null) return;
 
-        try
-        {
-            _originalOpacity = AssociatedObject.Opacity;
-            AssociatedObject.Opacity = 0.5;
-
-            var dragDataObject = new DataObject();
-            dragDataObject.Set(DataFormats.Text, DragData?.ToString() ?? string.Empty);
-            _logger?.Information($"Data set for drag operation: {DragData}");
-
-            await DragDrop.DoDragDrop(e, dragDataObject, DragDropEffects.Copy | DragDropEffects.Move);
-        }
-        finally
-        {
-            // Ensure the original opacity is restored, even if an exception occurs
-            ResetOpacity();
-        }
+        // Fire the async task without awaiting it directly to avoid issues
+        _ = StartDragDropAsync(e);
     }
     
-    /// <summary>
-    /// Handles the PointerReleased event to finalize the drag operation and clean up resources.
-    /// </summary>
-    /// <param name="sender">The event sender.</param>
-    /// <param name="e">Pointer released event arguments.</param>
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         _logger?.Information($"PointerReleased on {AssociatedObject}");
         ResetOpacity();
     }
     
-    /// <summary>
-    /// Resets the opacity of the associated object to its original value.
-    /// </summary>
     private void ResetOpacity()
     {
-        if (AssociatedObject == null) return;
-        AssociatedObject.Opacity = _originalOpacity;
+        if (AssociatedObject != null)
+        {
+            AssociatedObject.Opacity = _originalOpacity;
+        }
     }
+    
+    private async Task StartDragDropAsync(PointerPressedEventArgs e)
+    {
+        if (_isDragging) return;
+        
+        _isDragging = true;
+        
+        try
+        {
+            if (AssociatedObject != null)
+            {
+                _originalOpacity = AssociatedObject.Opacity;
+                AssociatedObject.Opacity = 0.5;
+            }
+
+            var dragDataObject = new DataObject();
+            dragDataObject.Set(
+                DataFormats.Text, 
+                DragData?.ToString() ?? string.Empty);
+            _logger?.Information(
+                $"Data set for drag operation: {DragData?.ToString() ?? "<null>"}");
+            
+            await DragDrop.DoDragDrop(e, dragDataObject, DragDropEffects.Copy | DragDropEffects.Move);
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error($"Exception during drag-drop operation: {ex.Message}", ex);
+        }
+        finally
+        {
+            ResetOpacity();
+            _isDragging = false;
+        }
+    }
+    
 }
