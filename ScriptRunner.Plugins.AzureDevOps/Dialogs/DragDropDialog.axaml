@@ -40,7 +40,8 @@
             </ItemsControl>
 
             <!-- Right Side: 4x4 Grid -->
-            <ItemsControl x:Name="GridItemsControl" Grid.Column="1" ItemsSource="{Binding GridItems, Mode=TwoWay}">
+            <ItemsControl x:Name="GridItemsControl" Grid.Column="1" 
+                          ItemsSource="{Binding GridItems, Mode=TwoWay}" >
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Rows="4" Columns="4" />
@@ -49,9 +50,9 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border BorderBrush="Black" BorderThickness="1" Background="White" Focusable="True"
-                                DragDrop.AllowDrop="True">
+                                DragDrop.AllowDrop="True" >
                             <behaviors:Interaction.Behaviors>
-                                <local:DropBehavior DroppedData="{Binding}" />
+                                <local:DropBehavior DroppedData="{Binding}"/>
                             </behaviors:Interaction.Behaviors>
                             <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>

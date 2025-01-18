@@ -114,7 +114,6 @@ public class DragDropDemo : IDragDropDemo
 
             behavior.SetLogger(_logger);
             Interaction.GetBehaviors(container).Add(behavior);
-            _logger?.Information($"DragBehavior attached to item at index {i}.");
         }
     }
 
@@ -144,8 +143,15 @@ public class DragDropDemo : IDragDropDemo
 
             var behavior = new DropBehavior();
             behavior.SetLogger(_logger);
+
+            // Attach the DropCompleted event handler
+            behavior.DropCompleted += (s, droppedData) =>
+            {
+                _logger?.Information($"Drop completed on container at index {i} with data: {droppedData}");
+                // Additional logic for handling the drop
+            };
+
             Interaction.GetBehaviors(container).Add(behavior);
-            _logger?.Information($"DropBehavior attached to cell at index {i}.");
         }
     }
 }

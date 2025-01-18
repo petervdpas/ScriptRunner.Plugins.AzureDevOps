@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactivity;
+using ScriptRunner.Plugins.AzureDevOps.ViewModels;
 using ScriptRunner.Plugins.Logging;
 
 namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
@@ -53,7 +55,6 @@ public class DropBehavior : Behavior<Control>
             return;
         }
         
-        _logger?.Information($"DropBehavior attached to {AssociatedObject}");
         AssociatedObject.AddHandler(DragDrop.DragOverEvent, OnDragOver, RoutingStrategies.Tunnel);
         AssociatedObject.AddHandler(DragDrop.DropEvent, OnDrop, RoutingStrategies.Tunnel);
     }
@@ -66,7 +67,6 @@ public class DropBehavior : Behavior<Control>
         base.OnDetaching();
         if (AssociatedObject == null) return;
         
-        _logger?.Information($"DropBehavior detached from {AssociatedObject}");
         AssociatedObject.RemoveHandler(DragDrop.DragOverEvent, OnDragOver);
         AssociatedObject.RemoveHandler(DragDrop.DropEvent, OnDrop);
     }
@@ -95,9 +95,24 @@ public class DropBehavior : Behavior<Control>
 
         if (e.Data.Contains(DataFormats.Text))
         {
-            DroppedData = e.Data.GetText();
-            _logger?.Information($"Data dropped successfully: {DroppedData}");
+            var droppedText = e.Data.GetText();
+            DroppedData = droppedText;
+            _logger?.Information($"Data dropped successfully: {droppedText}");
             e.Handled = true;
+
+            // Access the GridItems collection from the ItemsControl's DataContext
+            if (AssociatedObject?.Parent is ItemsControl { DataContext: DragDropDialogModel viewModel } parentControl)
+            {
+                // Get the index of the target cell using ItemsControl.IndexFromContainer
+                var index = parentControl.IndexFromContainer(AssociatedObject);
+
+                // Update the GridItems collection
+                if (index >= 0 && index < viewModel.GridItems.Count)
+                {
+                    _logger?.Information($"Updating GridItems at index {index} with {droppedText}.");
+                    viewModel.GridItems[index] = droppedText;
+                }
+            }
 
             // Notify subscribers about the completed drop
             DropCompleted?.Invoke(this, DroppedData);
