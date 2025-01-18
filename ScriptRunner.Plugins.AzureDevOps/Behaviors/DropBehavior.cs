@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -36,6 +37,11 @@ public class DropBehavior : Behavior<Control>
     }
 
     /// <summary>
+    /// An event that fires when a drop operation is successfully completed.
+    /// </summary>
+    public event EventHandler<object?>? DropCompleted;
+    
+    /// <summary>
     /// Called when the behavior is attached to a control.
     /// </summary>
     protected override void OnAttached()
@@ -72,13 +78,13 @@ public class DropBehavior : Behavior<Control>
         if (e.Data.Contains(DataFormats.Text))
         {
             _logger?.Information("DragOver: valid data detected.");
-            e.DragEffects = DragDropEffects.Copy;
+            e.DragEffects = DragDropEffects.Copy | DragDropEffects.Move;
             e.Handled = true;
         }
         else
         {
             _logger?.Warning("DragOver: no valid data detected.");
-            e.DragEffects = DragDropEffects.None; // Reject invalid data
+            e.DragEffects = DragDropEffects.None;
             e.Handled = true;
         }
     }
@@ -86,11 +92,15 @@ public class DropBehavior : Behavior<Control>
     private void OnDrop(object? sender, DragEventArgs e)
     {
         _logger?.Information($"Drop event triggered on {AssociatedObject}.");
+
         if (e.Data.Contains(DataFormats.Text))
         {
             DroppedData = e.Data.GetText();
             _logger?.Information($"Data dropped successfully: {DroppedData}");
             e.Handled = true;
+
+            // Notify subscribers about the completed drop
+            DropCompleted?.Invoke(this, DroppedData);
         }
         else
         {
