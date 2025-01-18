@@ -19,9 +19,15 @@
 
         <!-- Main Content: Drag and Drop Components -->
         <Grid ColumnDefinitions="1*,2*" Grid.Row="0">
+            
             <!-- Left Side: List of Items -->
-            <ListBox x:Name="ItemListBox" Grid.Column="0" ItemsSource="{Binding Items}">
-                <ListBox.ItemTemplate>
+            <ItemsControl x:Name="ItemListBox" Grid.Column="0" ItemsSource="{Binding Items}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical" /> <!-- Single-column layout -->
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" Padding="10" Background="LightGray">
                             <behaviors:Interaction.Behaviors>
@@ -29,8 +35,8 @@
                             </behaviors:Interaction.Behaviors>
                         </TextBlock>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
             <!-- Right Side: 4x4 Grid -->
             <ItemsControl x:Name="GridItemsControl" Grid.Column="1" ItemsSource="{Binding GridItems, Mode=TwoWay}">

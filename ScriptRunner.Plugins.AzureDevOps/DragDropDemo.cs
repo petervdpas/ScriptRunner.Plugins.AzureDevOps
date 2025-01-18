@@ -62,7 +62,7 @@ public class DragDropDemo : IDragDropDemo
         {
             _logger?.Information("Dialog opened. Attaching behaviors after delay...");
             await Task.Delay(50); // Add a slight delay to ensure the layout is complete
-            AttachBehaviors(dialog, _logger);
+            AttachBehaviors(dialog);
         };
         
         // Display the dialog and return the result
@@ -70,65 +70,82 @@ public class DragDropDemo : IDragDropDemo
     }
     
     /// <summary>
-    /// Attaches drag-and-drop behaviors to the dialog controls, enabling logging for drag-and-drop events.
+    /// Attaches drag-and-drop behaviors to the dialog controls.
     /// </summary>
-    /// <param name="dialog">The dialog to which behaviors are attached.</param>
-    /// <param name="logger">The logger used to log drag-and-drop events.</param>
-    private static void AttachBehaviors(DragDropDialog dialog, IPluginLogger? logger)
+    /// <param name="dialog">The dialog to configure.</param>
+    private void AttachBehaviors(DragDropDialog dialog)
     {
-        logger?.Information("Attaching behaviors...");
+        _logger?.Information("Attaching behaviors...");
 
-        // Attach DragBehavior to ListBox items
-        var listBox = dialog.FindControl<ListBox>("ItemListBox");
-        if (listBox is not null)
+        AttachDragBehavior(dialog, "ItemListBox");
+        AttachDropBehavior(dialog, "GridItemsControl");
+
+        _logger?.Information("Finished attaching behaviors.");
+    }
+
+    /// <summary>
+    /// Attaches drag behavior to a list or items control.
+    /// </summary>
+    private void AttachDragBehavior(DragDropDialog dialog, string controlName)
+    {
+        var control = dialog.FindControl<ItemsControl>(controlName);
+
+        if (control is null)
         {
-            logger?.Information("Found ListBox. Attaching DragBehavior...");
-            for (var i = 0; i < listBox.ItemCount; i++)
+            _logger?.Warning($"Control with name '{controlName}' not found.");
+            return;
+        }
+
+        _logger?.Information($"Found {controlName}. Attaching DragBehavior...");
+
+        for (var i = 0; i < control.ItemCount; i++)
+        {
+            var container = control.ContainerFromIndex(i);
+            if (container is null)
             {
-                var container = listBox.ContainerFromIndex(i);
-                if (container is null)
-                {
-                    logger?.Warning($"No container found for ListBox item at index {i}. Retrying...");
-                    continue;
-                }
-
-                var dragBehavior = new DragBehavior();
-                dragBehavior.SetLogger(logger); // Set logger
-                dragBehavior.DragData = listBox.Items.ElementAt(i); // Assign data context
-                Interaction.GetBehaviors(container).Add(dragBehavior);
-                logger?.Information($"DragBehavior attached to ListBox item at index {i}.");
+                _logger?.Warning($"No container found for item at index {i}.");
+                continue;
             }
-        }
-        else
-        {
-            logger?.Warning("ListBox not found in dialog.");
-        }
 
-        // Attach DropBehavior to ItemsControl cells
-        var itemsControl = dialog.FindControl<ItemsControl>("GridItemsControl");
-        if (itemsControl is not null)
-        {
-            logger?.Information("Found ItemsControl. Attaching DropBehavior...");
-            for (var i = 0; i < itemsControl.ItemCount; i++)
+            var behavior = new DragBehavior
             {
-                var container = itemsControl.ContainerFromIndex(i);
-                if (container is null)
-                {
-                    logger?.Warning($"No container found for ItemsControl cell at index {i}. Retrying...");
-                    continue;
-                }
+                DragData = control.Items.ElementAt(i)
+            };
 
-                var dropBehavior = new DropBehavior();
-                dropBehavior.SetLogger(logger); // Set logger
-                Interaction.GetBehaviors(container).Add(dropBehavior);
-                logger?.Information($"DropBehavior attached to ItemsControl cell at index {i}.");
-            }
+            behavior.SetLogger(_logger);
+            Interaction.GetBehaviors(container).Add(behavior);
+            _logger?.Information($"DragBehavior attached to item at index {i}.");
         }
-        else
+    }
+
+    /// <summary>
+    /// Attaches drop behavior to an item-control.
+    /// </summary>
+    private void AttachDropBehavior(DragDropDialog dialog, string controlName)
+    {
+        var control = dialog.FindControl<ItemsControl>(controlName);
+
+        if (control is null)
         {
-            logger?.Warning("ItemsControl not found in dialog.");
+            _logger?.Warning($"Control with name '{controlName}' not found.");
+            return;
         }
 
-        logger?.Information("Finished attaching behaviors.");
+        _logger?.Information($"Found {controlName}. Attaching DropBehavior...");
+
+        for (var i = 0; i < control.ItemCount; i++)
+        {
+            var container = control.ContainerFromIndex(i);
+            if (container is null)
+            {
+                _logger?.Warning($"No container found for item at index {i}.");
+                continue;
+            }
+
+            var behavior = new DropBehavior();
+            behavior.SetLogger(_logger);
+            Interaction.GetBehaviors(container).Add(behavior);
+            _logger?.Information($"DropBehavior attached to cell at index {i}.");
+        }
     }
 }

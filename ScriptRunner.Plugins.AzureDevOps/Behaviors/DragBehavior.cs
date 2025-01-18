@@ -82,7 +82,8 @@ public class DragBehavior : Behavior<Control>
         
         if (DragData == null || AssociatedObject == null) return;
 
-        _dragStartPoint = e.GetPosition(AssociatedObject);
+        _dragStartPoint = e.GetPosition(null);
+
         e.Pointer.Capture(AssociatedObject);
         _isDragging = true;
         
@@ -100,9 +101,9 @@ public class DragBehavior : Behavior<Control>
     /// <param name="e">Pointer moved event arguments.</param>
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (!_isDragging || _ghost == null) return;
+        if (!_isDragging || _ghost == null || AssociatedObject == null) return;
 
-        var currentPosition = e.GetPosition(AssociatedObject);
+        var currentPosition = e.GetPosition(null);
 
         // Update ghost position
         Canvas.SetLeft(_ghost, currentPosition.X);
