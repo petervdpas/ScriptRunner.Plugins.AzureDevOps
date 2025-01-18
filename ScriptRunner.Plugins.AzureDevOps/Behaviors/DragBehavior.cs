@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -20,7 +21,9 @@ public class DragBehavior : Behavior<Control>
     private Control? _ghost; // The visual representation of the dragged item
     private Point _dragStartPoint;
     private bool _isDragging;
+    private bool _dragInitiated;
     private double _originalOpacity;
+    private const double DragThreshold = 5.0;
     
     /// <summary>
     /// Sets the logger for drag-and-drop events.
@@ -83,15 +86,8 @@ public class DragBehavior : Behavior<Control>
         if (DragData == null || AssociatedObject == null) return;
 
         _dragStartPoint = e.GetPosition(null);
-
-        e.Pointer.Capture(AssociatedObject);
         _isDragging = true;
-        
-        _originalOpacity = AssociatedObject.Opacity;
-        AssociatedObject.Opacity = 0.1;
-        
-        // Create the ghost immediately when the drag starts
-        CreateGhost(_dragStartPoint);
+        _dragInitiated = false;
     }
     
     /// <summary>
@@ -101,13 +97,35 @@ public class DragBehavior : Behavior<Control>
     /// <param name="e">Pointer moved event arguments.</param>
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (!_isDragging || _ghost == null || AssociatedObject == null) return;
+        if (!_isDragging || AssociatedObject == null) return;
 
         var currentPosition = e.GetPosition(null);
+        
+        // Calculate distance moved
+        var dx = currentPosition.X - _dragStartPoint.X;
+        var dy = currentPosition.Y - _dragStartPoint.Y;
+        var distance = Math.Sqrt(dx * dx + dy * dy);
 
-        // Update ghost position
-        Canvas.SetLeft(_ghost, currentPosition.X);
-        Canvas.SetTop(_ghost, currentPosition.Y);
+        // If we haven't started dragging yet, and we've moved past the threshold
+        if (!_dragInitiated && distance > DragThreshold)
+        {
+            _dragInitiated = true;
+            CreateGhost(currentPosition);
+            
+            /*
+            var dragDataString = DragData?.ToString() ?? string.Empty;
+            var data = new DataObject();
+            data.Set(DataFormats.Text, dragDataString);
+            
+            DragDrop.DoDragDrop(e, data, DragDropEffects.Copy | DragDropEffects.Move);
+            */
+        }
+        
+        // Update ghost position if it exists
+        if (_ghost == null) return;
+        
+        Canvas.SetLeft(_ghost, currentPosition.X - _ghost.Bounds.Width / 2);
+        Canvas.SetTop(_ghost, currentPosition.Y - _ghost.Bounds.Height / 2);
     }
     
     /// <summary>
@@ -119,15 +137,10 @@ public class DragBehavior : Behavior<Control>
     {
         if (!_isDragging) return;
         
-        _logger?.Information($"PointerReleased on {AssociatedObject}");
-        
-        _dragStartPoint = default;
-        e.Pointer.Capture(null);
+        _logger?.Information("PointerReleased on AssociatedObject.");
         _isDragging = false;
-
+        _dragInitiated = false;
         RemoveGhost();
-        
-        _logger?.Information("Drag operation finalized and resources cleaned up.");
     }
     
     /// <summary>
@@ -136,40 +149,27 @@ public class DragBehavior : Behavior<Control>
     /// <param name="pointerPosition">The position of the pointer.</param>
     private void CreateGhost(Point pointerPosition)
     {
-        if (_ghost != null)
-        {
-            _logger?.Warning("Ghost already exists. Skipping creation.");
-            return;
-        }
+        if (_ghost != null || AssociatedObject == null) return;
 
-        if (AssociatedObject == null)
-        {
-            _logger?.Warning("AssociatedObject is null. Cannot create ghost.");
-            return;
-        }
-
-        // Create a ghost representation
         _ghost = CloneControl(AssociatedObject);
-        _ghost.Opacity = 1; // Fully visible ghost
+        _ghost.Opacity = 0.7;
         _ghost.IsHitTestVisible = false;
 
-        // Attach ghost to the OverlayLayer
+        _originalOpacity = AssociatedObject.Opacity;
+        AssociatedObject.Opacity = 0.5;
+        
         var overlayLayer = (AssociatedObject.GetVisualRoot() as TopLevel)?
             .Find<Canvas>("OverlayLayer");
 
         if (overlayLayer == null)
         {
-            _logger?.Warning("OverlayLayer not found. Ghost will not be added.");
-            _ghost = null; // Avoid leaking the ghost reference
+            _ghost = null;
             return;
         }
 
-        _logger?.Information("Adding ghost to OverlayLayer.");
         overlayLayer.Children.Add(_ghost);
-
-        // Position the ghost
-        Canvas.SetLeft(_ghost, pointerPosition.X);
-        Canvas.SetTop(_ghost, pointerPosition.Y);
+        Canvas.SetLeft(_ghost, pointerPosition.X - _ghost.Bounds.Width / 2);
+        Canvas.SetTop(_ghost, pointerPosition.Y - _ghost.Bounds.Height / 2);
     }
 
     /// <summary>
@@ -177,33 +177,21 @@ public class DragBehavior : Behavior<Control>
     /// </summary>
     private void RemoveGhost()
     {
-        if (_ghost == null)
-        {
-            _logger?.Warning("No ghost exists to remove.");
-            return;
-        }
+        if (_ghost == null) return;
 
-        // Restore the original control's visibility
         if (AssociatedObject != null)
         {
             AssociatedObject.Opacity = _originalOpacity;
         }
         
-        // Find the OverlayLayer
         var overlayLayer = (AssociatedObject?.GetVisualRoot() as TopLevel)?
             .Find<Canvas>("OverlayLayer");
 
-        if (overlayLayer != null && overlayLayer.Children.Contains(_ghost))
+        if (overlayLayer?.Children.Contains(_ghost) == true)
         {
-            _logger?.Information("Removing ghost from OverlayLayer.");
             overlayLayer.Children.Remove(_ghost);
         }
-        else
-        {
-            _logger?.Warning("Ghost not found in OverlayLayer during removal.");
-        }
 
-        // Clear the reference to the ghost
         _ghost = null;
     }
     

@@ -29,7 +29,8 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding}" Padding="10" Background="LightGray">
+                        <TextBlock Text="{Binding}" Padding="10" Background="LightGray"
+                                   DragDrop.AllowDrop="True">
                             <behaviors:Interaction.Behaviors>
                                 <local:DragBehavior DragData="{Binding}" />
                             </behaviors:Interaction.Behaviors>
@@ -47,7 +48,8 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border BorderBrush="Black" BorderThickness="1" Background="White" Focusable="True">
+                        <Border BorderBrush="Black" BorderThickness="1" Background="White" Focusable="True"
+                                DragDrop.AllowDrop="True">
                             <behaviors:Interaction.Behaviors>
                                 <local:DropBehavior DroppedData="{Binding}" />
                             </behaviors:Interaction.Behaviors>
