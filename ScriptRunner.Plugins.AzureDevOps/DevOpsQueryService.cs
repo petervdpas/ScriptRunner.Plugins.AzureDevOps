@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -17,7 +16,7 @@ using ScriptRunner.Plugins.Tools;
 namespace ScriptRunner.Plugins.AzureDevOps;
 
 /// <summary>
-/// Implements methods for interacting with Azure DevOps queries and work items.
+///     Implements methods for interacting with Azure DevOps queries and work items.
 /// </summary>
 public class DevOpsQueryService : IDevOpsQueryService
 {
@@ -26,7 +25,7 @@ public class DevOpsQueryService : IDevOpsQueryService
     private readonly HttpClient _httpClient;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DevOpsQueryService"/> class.
+    ///     Initializes a new instance of the <see cref="DevOpsQueryService" /> class.
     /// </summary>
     public DevOpsQueryService()
     {
@@ -43,7 +42,7 @@ public class DevOpsQueryService : IDevOpsQueryService
 
         _database = new SqliteDatabase();
         _database.Setup($"Data Source={_config.DbPath};");
-        
+
         InitializeDatabase();
     }
 
@@ -52,14 +51,12 @@ public class DevOpsQueryService : IDevOpsQueryService
     {
         return queryTemplate?.Replace("@AREAPATH@", _config.AreaPath);
     }
-    
+
     /// <inheritdoc />
     public async Task<JArray?> ExecuteQuery(string? query)
     {
         if (string.IsNullOrWhiteSpace(query))
-        {
             throw new ArgumentException("Query cannot be null or whitespace.", nameof(query));
-        }
 
         var url = $"{_config.ApiEndpoint}/{_config.Organization}/{_config.Project}/_apis/wit/wiql?api-version=6.0";
         var wiql = new { query };
@@ -84,7 +81,8 @@ public class DevOpsQueryService : IDevOpsQueryService
     /// <inheritdoc />
     public async Task<WorkItemViewModel?> FetchWorkItemDetails(string workItemId)
     {
-        var url = $"{_config.ApiEndpoint}/{_config.Organization}/{_config.Project}/_apis/wit/workitems/{workItemId}?api-version=6.0";
+        var url =
+            $"{_config.ApiEndpoint}/{_config.Organization}/{_config.Project}/_apis/wit/workitems/{workItemId}?api-version=6.0";
         var response = await _httpClient.GetAsync(url);
         ValidateHttpResponse(response, url);
 
@@ -114,9 +112,9 @@ public class DevOpsQueryService : IDevOpsQueryService
             return null;
         }
     }
-    
+
     /// <summary>
-    /// Adds a new saved query to the SQLite database.
+    ///     Adds a new saved query to the SQLite database.
     /// </summary>
     public async Task AddSavedQuery(SavedQuery query)
     {
@@ -140,7 +138,7 @@ public class DevOpsQueryService : IDevOpsQueryService
     }
 
     /// <summary>
-    /// Retrieves all saved queries from the SQLite database.
+    ///     Retrieves all saved queries from the SQLite database.
     /// </summary>
     public async Task<List<SavedQuery>> GetSavedQueries()
     {
@@ -162,7 +160,7 @@ public class DevOpsQueryService : IDevOpsQueryService
     }
 
     /// <summary>
-    /// Updates an existing saved query in the SQLite database.
+    ///     Updates an existing saved query in the SQLite database.
     /// </summary>
     public async Task UpdateSavedQuery(SavedQuery query)
     {
@@ -188,7 +186,7 @@ public class DevOpsQueryService : IDevOpsQueryService
     }
 
     /// <summary>
-    /// Deletes a saved query from the SQLite database by its ID.
+    ///     Deletes a saved query from the SQLite database by its ID.
     /// </summary>
     public async Task DeleteSavedQuery(Guid queryId)
     {
@@ -205,9 +203,9 @@ public class DevOpsQueryService : IDevOpsQueryService
 
         await Task.CompletedTask;
     }
-    
+
     /// <summary>
-    /// Converts an HTML string to plain text.
+    ///     Converts an HTML string to plain text.
     /// </summary>
     /// <param name="html">The HTML string to convert.</param>
     /// <returns>The plain text representation of the HTML.</returns>
@@ -225,10 +223,10 @@ public class DevOpsQueryService : IDevOpsQueryService
     }
 
     /// <summary>
-    /// Recursively converts HTML nodes to plain text.
+    ///     Recursively converts HTML nodes to plain text.
     /// </summary>
     /// <param name="node">The current HTML node.</param>
-    /// <param name="sb">The <see cref="StringBuilder"/> to append the plain text to.</param>
+    /// <param name="sb">The <see cref="StringBuilder" /> to append the plain text to.</param>
     private static void ConvertToPlainText(HtmlNode? node, StringBuilder sb)
     {
         if (node == null)
@@ -270,6 +268,7 @@ public class DevOpsQueryService : IDevOpsQueryService
                             ConvertToPlainText(child, sb);
                         break;
                 }
+
                 break;
 
             case HtmlNodeType.Text:
@@ -279,9 +278,9 @@ public class DevOpsQueryService : IDevOpsQueryService
                 break;
         }
     }
-    
+
     /// <summary>
-    /// Ensures the database schema for saved queries is created.
+    ///     Ensures the database schema for saved queries is created.
     /// </summary>
     private void InitializeDatabase()
     {
@@ -296,9 +295,9 @@ public class DevOpsQueryService : IDevOpsQueryService
         _database.ExecuteNonQuery(createTableQuery);
         _database.CloseConnection();
     }
-    
+
     /// <summary>
-    /// Validates the essential configuration properties.
+    ///     Validates the essential configuration properties.
     /// </summary>
     private void ValidateConfiguration()
     {
@@ -313,19 +312,19 @@ public class DevOpsQueryService : IDevOpsQueryService
     }
 
     /// <summary>
-    /// Validates the HTTP response and logs an appropriate message.
+    ///     Validates the HTTP response and logs an appropriate message.
     /// </summary>
     private static void ValidateHttpResponse(HttpResponseMessage response, string url)
     {
         if (response.IsSuccessStatusCode) return;
-        
+
         var error = $"HTTP request failed with status code {response.StatusCode} for URL: {url}";
         Console.WriteLine(error);
         throw new HttpRequestException(error);
     }
 
     /// <summary>
-    /// Validates the database path.
+    ///     Validates the database path.
     /// </summary>
     private void ValidateDatabasePath()
     {

@@ -10,28 +10,22 @@ using ScriptRunner.Plugins.Logging;
 namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
 
 /// <summary>
-/// A behavior that enables drag-and-drop functionality for a control in Avalonia.
+///     A behavior that enables drag-and-drop functionality for a control in Avalonia.
 /// </summary>
 public class DragBehavior : Behavior<Control>
 {
-    private IPluginLogger? _logger;
-    private double _originalOpacity;
-    private bool _isDragging;
-
     /// <summary>
-    /// Sets the logger for drag-and-drop events.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public void SetLogger(IPluginLogger? logger) => _logger = logger;
-
-    /// <summary>
-    /// Defines the <see cref="DragData"/> property that stores the data to be dragged.
+    ///     Defines the <see cref="DragData" /> property that stores the data to be dragged.
     /// </summary>
     public static readonly StyledProperty<object?> DragDataProperty =
         AvaloniaProperty.Register<DragBehavior, object?>(nameof(DragData));
 
+    private bool _isDragging;
+    private IPluginLogger? _logger;
+    private double _originalOpacity;
+
     /// <summary>
-    /// Gets or sets the data to be used for the drag operation.
+    ///     Gets or sets the data to be used for the drag operation.
     /// </summary>
     public object? DragData
     {
@@ -40,39 +34,48 @@ public class DragBehavior : Behavior<Control>
     }
 
     /// <summary>
-    /// Called when the behavior is attached to a control.
+    ///     Sets the logger for drag-and-drop events.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    public void SetLogger(IPluginLogger? logger)
+    {
+        _logger = logger;
+    }
+
+    /// <summary>
+    ///     Called when the behavior is attached to a control.
     /// </summary>
     protected override void OnAttached()
     {
         base.OnAttached();
         if (AssociatedObject == null) return;
-        
+
         AssociatedObject.AddHandler(
-            InputElement.PointerPressedEvent, 
-            OnPointerPressed, 
+            InputElement.PointerPressedEvent,
+            OnPointerPressed,
             RoutingStrategies.Tunnel);
         AssociatedObject.AddHandler(
-            InputElement.PointerReleasedEvent, 
-            OnPointerReleased, 
+            InputElement.PointerReleasedEvent,
+            OnPointerReleased,
             RoutingStrategies.Tunnel);
     }
 
     /// <summary>
-    /// Called when the behavior is detached from a control.
+    ///     Called when the behavior is detached from a control.
     /// </summary>
     protected override void OnDetaching()
     {
         base.OnDetaching();
         if (AssociatedObject == null) return;
-        
+
         AssociatedObject.RemoveHandler(
-            InputElement.PointerPressedEvent, 
+            InputElement.PointerPressedEvent,
             OnPointerPressed);
         AssociatedObject.RemoveHandler(
-            InputElement.PointerReleasedEvent, 
+            InputElement.PointerReleasedEvent,
             OnPointerReleased);
     }
-    
+
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (DragData == null || AssociatedObject == null) return;
@@ -80,26 +83,23 @@ public class DragBehavior : Behavior<Control>
         // Fire the async task without awaiting it directly to avoid issues
         _ = StartDragDropAsync(e);
     }
-    
+
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         ResetOpacity();
     }
-    
+
     private void ResetOpacity()
     {
-        if (AssociatedObject != null)
-        {
-            AssociatedObject.Opacity = _originalOpacity;
-        }
+        if (AssociatedObject != null) AssociatedObject.Opacity = _originalOpacity;
     }
-    
+
     private async Task StartDragDropAsync(PointerPressedEventArgs eventArgs)
     {
         if (_isDragging) return;
-        
+
         _isDragging = true;
-        
+
         try
         {
             if (AssociatedObject != null)
@@ -110,12 +110,12 @@ public class DragBehavior : Behavior<Control>
 
             var dragDataObject = new DataObject();
             dragDataObject.Set(
-                DataFormats.Text, 
+                DataFormats.Text,
                 DragData?.ToString() ?? string.Empty);
-            
+
             await DragDrop.DoDragDrop(
-                eventArgs, 
-                dragDataObject, 
+                eventArgs,
+                dragDataObject,
                 DragDropEffects.Copy | DragDropEffects.Move);
         }
         catch (Exception ex)

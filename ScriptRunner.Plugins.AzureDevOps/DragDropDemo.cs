@@ -13,34 +13,35 @@ using ScriptRunner.Plugins.Utilities;
 namespace ScriptRunner.Plugins.AzureDevOps;
 
 /// <summary>
-/// Implements the drag-and-drop demo interface, providing functionality to display a drag-and-drop demo window.
+///     Implements the drag-and-drop demo interface, providing functionality to display a drag-and-drop demo window.
 /// </summary>
 public class DragDropDemo : IDragDropDemo
 {
     private readonly IPluginLogger? _logger;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DragDropDemo"/> class with a logger.
+    ///     Initializes a new instance of the <see cref="DragDropDemo" /> class with a logger.
     /// </summary>
     /// <param name="logger">
-    /// An optional logger implementing <see cref="IPluginLogger"/> used to log drag-and-drop events.
+    ///     An optional logger implementing <see cref="IPluginLogger" /> used to log drag-and-drop events.
     /// </param>
     public DragDropDemo(IPluginLogger? logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    
+
     /// <summary>
-    /// Displays a drag-and-drop demo dialog with the specified title, width, and height.
+    ///     Displays a drag-and-drop demo dialog with the specified title, width, and height.
     /// </summary>
     /// <param name="title">The title of the dialog window. Defaults to "Drag &amp; Drop Demo".</param>
     /// <param name="width">The width of the dialog window in pixels. Defaults to 800.</param>
     /// <param name="height">The height of the dialog window in pixels. Defaults to 600.</param>
     /// <returns>
-    /// A <see cref="Task{TResult}"/> representing the asynchronous operation.
-    /// The result is a string containing the data dropped into the dialog, or <c>null</c> if no data was dropped.
+    ///     A <see cref="Task{TResult}" /> representing the asynchronous operation.
+    ///     The result is a string containing the data dropped into the dialog, or <c>null</c> if no data was dropped.
     /// </returns>
-    public async Task<string?> DisplayDragDropDemoAsync(string title = "Drag & Drop Demo", int width = 800, int height = 600)
+    public async Task<string?> DisplayDragDropDemoAsync(string title = "Drag & Drop Demo", int width = 800,
+        int height = 600)
     {
         // Create and configure the Azure DevOps dialog
         var dialog = new DragDropDialog
@@ -64,13 +65,13 @@ public class DragDropDemo : IDragDropDemo
             await Task.Delay(50); // Add a slight delay to ensure the layout is complete
             AttachBehaviors(dialog);
         };
-        
+
         // Display the dialog and return the result
         return await DialogHelper.ShowDialogAsync(dialog.ShowDialog<string?>);
     }
-    
+
     /// <summary>
-    /// Attaches drag-and-drop behaviors to the dialog controls.
+    ///     Attaches drag-and-drop behaviors to the dialog controls.
     /// </summary>
     /// <param name="dialog">The dialog to configure.</param>
     private void AttachBehaviors(DragDropDialog dialog)
@@ -84,7 +85,7 @@ public class DragDropDemo : IDragDropDemo
     }
 
     /// <summary>
-    /// Attaches drag behavior to a list or items control.
+    ///     Attaches drag behavior to a list or items control.
     /// </summary>
     private void AttachDragBehavior(DragDropDialog dialog, string controlName)
     {
@@ -118,7 +119,7 @@ public class DragDropDemo : IDragDropDemo
     }
 
     /// <summary>
-    /// Attaches drop behavior to an item-control.
+    ///     Attaches drop behavior to an item-control.
     /// </summary>
     private void AttachDropBehavior(DragDropDialog dialog, string controlName)
     {

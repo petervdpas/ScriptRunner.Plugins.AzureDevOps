@@ -11,97 +11,20 @@ using ScriptRunner.Plugins.AzureDevOps.Models;
 namespace ScriptRunner.Plugins.AzureDevOps.ViewModels;
 
 /// <summary>
-/// Represents the ViewModel for Azure DevOps integration, handling query execution, management, and work item display.
+///     Represents the ViewModel for Azure DevOps integration, handling query execution, management, and work item display.
 /// </summary>
 public class AzureDevOpsModel : ReactiveObject
 {
-    private readonly IDevOpsQueryService _queryService;
     private readonly Window _dialog;
-
-    private WorkItemViewModel? _selectedItem;
-    private int _selectedTabIndex;
-    private SavedQuery? _selectedSavedQuery;
+    private readonly IDevOpsQueryService _queryService;
     private SavedQuery? _currentQuery;
 
-    /// <summary>
-    /// Gets the command for executing a query.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ExecuteQueryCommand { get; }
+    private WorkItemViewModel? _selectedItem;
+    private SavedQuery? _selectedSavedQuery;
+    private int _selectedTabIndex;
 
     /// <summary>
-    /// Gets the command for saving a query.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> SaveQueryCommand { get; }
-
-    /// <summary>
-    /// Gets the command for deleting a query.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> DeleteQueryCommand { get; }
-
-    /// <summary>
-    /// Gets the command for loading all saved queries.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> LoadQueriesCommand { get; }
-
-    /// <summary>
-    /// Gets the collection of work items retrieved from Azure DevOps.
-    /// </summary>
-    public ObservableCollection<WorkItemViewModel> WorkItems { get; } = new();
-
-    /// <summary>
-    /// Gets the collection of saved queries.
-    /// </summary>
-    public ObservableCollection<SavedQuery?> SavedQueries { get; } = new();
-
-    /// <summary>
-    /// Gets or sets the currently selected work item.
-    /// </summary>
-    public WorkItemViewModel? SelectedItem
-    {
-        get => _selectedItem;
-        set => this.RaiseAndSetIfChanged(ref _selectedItem, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the currently selected tab index in the UI.
-    /// </summary>
-    public int SelectedTabIndex
-    {
-        get => _selectedTabIndex;
-        set => this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the currently selected saved query.
-    /// </summary>
-    public SavedQuery? SelectedSavedQuery
-    {
-        get => _selectedSavedQuery;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _selectedSavedQuery, value);
-            if (value != null)
-            {
-                CurrentQuery = new SavedQuery
-                {
-                    Name = value.Name,
-                    QueryText = value.QueryText
-                };
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the current query being edited or executed.
-    /// </summary>
-    public SavedQuery? CurrentQuery
-    {
-        get => _currentQuery;
-        set => this.RaiseAndSetIfChanged(ref _currentQuery, value);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AzureDevOpsModel"/> class.
+    ///     Initializes a new instance of the <see cref="AzureDevOpsModel" /> class.
     /// </summary>
     /// <param name="dialog">The parent dialog window managing this ViewModel.</param>
     /// <param name="queryService">The service used to interact with Azure DevOps queries and work items.</param>
@@ -114,7 +37,7 @@ public class AzureDevOpsModel : ReactiveObject
         {
             Name = "Committed WorkItems",
             QueryText =
-                $"SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.State] = 'Committed' AND [System.AreaPath] = '@AREAPATH@' ORDER BY [System.Id]"
+                "SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.State] = 'Committed' AND [System.AreaPath] = '@AREAPATH@' ORDER BY [System.Id]"
         };
 
         ExecuteQueryCommand = ReactiveCommand.CreateFromTask(ExecuteQuery);
@@ -126,7 +49,82 @@ public class AzureDevOpsModel : ReactiveObject
     }
 
     /// <summary>
-    /// Executes the current query and retrieves work items from Azure DevOps.
+    ///     Gets the command for executing a query.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ExecuteQueryCommand { get; }
+
+    /// <summary>
+    ///     Gets the command for saving a query.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> SaveQueryCommand { get; }
+
+    /// <summary>
+    ///     Gets the command for deleting a query.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> DeleteQueryCommand { get; }
+
+    /// <summary>
+    ///     Gets the command for loading all saved queries.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> LoadQueriesCommand { get; }
+
+    /// <summary>
+    ///     Gets the collection of work items retrieved from Azure DevOps.
+    /// </summary>
+    public ObservableCollection<WorkItemViewModel> WorkItems { get; } = new();
+
+    /// <summary>
+    ///     Gets the collection of saved queries.
+    /// </summary>
+    public ObservableCollection<SavedQuery?> SavedQueries { get; } = new();
+
+    /// <summary>
+    ///     Gets or sets the currently selected work item.
+    /// </summary>
+    public WorkItemViewModel? SelectedItem
+    {
+        get => _selectedItem;
+        set => this.RaiseAndSetIfChanged(ref _selectedItem, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets the currently selected tab index in the UI.
+    /// </summary>
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set => this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets the currently selected saved query.
+    /// </summary>
+    public SavedQuery? SelectedSavedQuery
+    {
+        get => _selectedSavedQuery;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedSavedQuery, value);
+            if (value != null)
+                CurrentQuery = new SavedQuery
+                {
+                    Name = value.Name,
+                    QueryText = value.QueryText
+                };
+        }
+    }
+
+    /// <summary>
+    ///     Gets or sets the current query being edited or executed.
+    /// </summary>
+    public SavedQuery? CurrentQuery
+    {
+        get => _currentQuery;
+        set => this.RaiseAndSetIfChanged(ref _currentQuery, value);
+    }
+
+    /// <summary>
+    ///     Executes the current query and retrieves work items from Azure DevOps.
     /// </summary>
     private async Task ExecuteQuery()
     {
@@ -195,7 +193,7 @@ public class AzureDevOpsModel : ReactiveObject
     }
 
     /// <summary>
-    /// Saves the current query to the database.
+    ///     Saves the current query to the database.
     /// </summary>
     private async Task SaveQuery()
     {
@@ -235,7 +233,7 @@ public class AzureDevOpsModel : ReactiveObject
     }
 
     /// <summary>
-    /// Deletes the currently selected saved query.
+    ///     Deletes the currently selected saved query.
     /// </summary>
     private async Task DeleteQuery()
     {
@@ -258,7 +256,7 @@ public class AzureDevOpsModel : ReactiveObject
     }
 
     /// <summary>
-    /// Loads all saved queries from the database.
+    ///     Loads all saved queries from the database.
     /// </summary>
     private async Task LoadQueries()
     {
@@ -267,10 +265,7 @@ public class AzureDevOpsModel : ReactiveObject
         try
         {
             var queries = await _queryService.GetSavedQueries();
-            foreach (var query in queries)
-            {
-                SavedQueries.Add(query);
-            }
+            foreach (var query in queries) SavedQueries.Add(query);
             Console.WriteLine("Saved queries loaded successfully.");
         }
         catch (Exception ex)
@@ -278,9 +273,9 @@ public class AzureDevOpsModel : ReactiveObject
             Console.WriteLine($"Error loading saved queries: {ex.Message}");
         }
     }
-    
+
     /// <summary>
-    /// Closes the dialog window without returning any result.
+    ///     Closes the dialog window without returning any result.
     /// </summary>
     private void CloseDialog()
     {
