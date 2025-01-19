@@ -15,7 +15,11 @@ namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
 public class DropBehavior : Behavior<Control>
 {
     /// <summary>
-    ///     Defines the <see cref="DroppedData" /> property that stores the data dropped onto the control.
+    ///     Defines the
+    ///     <see>
+    /// <cref>DroppedData</cref>
+    ///     </see>
+    ///     property that stores the data dropped onto the control.
     /// </summary>
     public static readonly StyledProperty<object?> DroppedDataProperty =
         AvaloniaProperty.Register<DropBehavior, object?>(nameof(DroppedData));
