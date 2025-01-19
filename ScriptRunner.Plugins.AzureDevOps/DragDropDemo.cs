@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Xaml.Interactivity;
 using ScriptRunner.Plugins.AzureDevOps.Behaviors;
 using ScriptRunner.Plugins.AzureDevOps.Dialogs;
 using ScriptRunner.Plugins.AzureDevOps.Interfaces;
@@ -85,6 +83,7 @@ public class DragDropDemo : IDragDropDemo
         {
             behavior.DragStartedAction = data =>
             {
+                System.Diagnostics.Debug.WriteLine("DragStartedAction invoked!");
                 _logger?.Information($"Drag started with data: {data}");
             };
         });

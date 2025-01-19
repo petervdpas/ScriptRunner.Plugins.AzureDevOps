@@ -4,20 +4,17 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Xaml.Interactivity;
-using ScriptRunner.Plugins.Logging;
 
 namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
 
 /// <summary>
 ///     A behavior that enables drag-and-drop functionality for a control in Avalonia.
 /// </summary>
-public class DragBehavior : Behavior<Control>
+public class DragBehavior : BaseBehavior<Control>
 {
-    private IPluginLogger? _logger;
     private double _originalOpacity;
     private bool _isDragging;
-
+    
     /// <summary>
     ///     Defines the <see cref="DragData" /> property that stores the data to be dragged.
     /// </summary>
@@ -47,15 +44,6 @@ public class DragBehavior : Behavior<Control>
     {
         get => GetValue(DragStartedActionProperty);
         set => SetValue(DragStartedActionProperty, value);
-    }
-    
-    /// <summary>
-    ///     Sets the logger for drag-and-drop events.
-    /// </summary>
-    /// <param name="logger">The logger instance used to record events and errors.</param>
-    public void SetLogger(IPluginLogger? logger)
-    {
-        _logger = logger;
     }
 
     /// <summary>
@@ -104,8 +92,6 @@ public class DragBehavior : Behavior<Control>
         if (DragData == null || AssociatedObject == null) return;
 
         DragStartedAction?.Invoke(DragData);
-
-        // Fire the async task without awaiting it directly to avoid issues
         _ = StartDragDropAsync(e);
     }
 
@@ -118,7 +104,7 @@ public class DragBehavior : Behavior<Control>
     {
         ResetOpacity();
     }
-
+    
     /// <summary>
     /// Resets the opacity of the associated control to its original value.
     /// </summary>
@@ -156,7 +142,7 @@ public class DragBehavior : Behavior<Control>
         }
         catch (Exception ex)
         {
-            _logger?.Error($"Exception during drag-drop operation: {ex.Message}", ex);
+            Logger?.Error($"Exception during drag-drop operation: {ex.Message}", ex);
         }
         finally
         {

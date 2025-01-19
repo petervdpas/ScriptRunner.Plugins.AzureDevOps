@@ -2,14 +2,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Xaml.Interactivity;
 
 namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
 
 /// <summary>
 ///     A behavior to change the background color of a control (like a Border) when the pointer is over it.
 /// </summary>
-public class PointerOverBehavior : Behavior<Border>
+public class PointerOverBehavior : BaseBehavior<Border>
 {
     /// <summary>
     ///     The default color of the Border when the pointer is not over it.

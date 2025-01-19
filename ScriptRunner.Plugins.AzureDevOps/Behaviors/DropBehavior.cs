@@ -3,18 +3,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Xaml.Interactivity;
-using ScriptRunner.Plugins.Logging;
 
 namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
 
 /// <summary>
 ///     A behavior that enables drop functionality for a control in Avalonia.
 /// </summary>
-public class DropBehavior : Behavior<Control>
+public class DropBehavior : BaseBehavior<Control>
 {
-    private IPluginLogger? _logger;
-        
     /// <summary>
     ///     Defines the
     ///     <see>
@@ -48,15 +44,6 @@ public class DropBehavior : Behavior<Control>
         get => GetValue(DropActionProperty);
         set => SetValue(DropActionProperty, value);
     }
-    
-    /// <summary>
-    ///     Sets the logger for drag-and-drop events.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public void SetLogger(IPluginLogger? logger)
-    {
-        _logger = logger;
-    }
 
     /// <summary>
     ///     An event that fires when a drop operation is successfully completed.
@@ -73,7 +60,7 @@ public class DropBehavior : Behavior<Control>
         base.OnAttached();
         if (AssociatedObject == null)
         {
-            _logger?.Warning("DropBehavior: AssociatedObject is null.");
+            Logger?.Warning("DropBehavior: AssociatedObject is null.");
             return;
         }
 

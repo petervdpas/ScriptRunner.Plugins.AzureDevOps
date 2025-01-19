@@ -1,6 +1,7 @@
 ﻿using System;
 using Avalonia.Controls;
 using Avalonia.Xaml.Interactivity;
+using ScriptRunner.Plugins.AzureDevOps.Behaviors;
 
 namespace ScriptRunner.Plugins.AzureDevOps.Interfaces;
 
@@ -23,11 +24,11 @@ public interface IDragDropService
     /// For instance, you can provide specific actions to execute when the behavior triggers.
     /// </param>
     void AttachBehavior<TBehavior>(ItemsControl? itemsControl, Action<TBehavior>? configureBehavior = null)
-        where TBehavior : Behavior<Control>, new();
+        where TBehavior : BaseBehavior<Control>, new();
 
     /// <summary>
     /// Attaches a behavior of the specified type to all child controls of a parent control.
-    /// This allows applying behaviors to nested elements dynamically.
+    /// This allows applying behaviors to nest elements dynamically.
     /// </summary>
     /// <typeparam name="TBehavior">The type of the behavior to attach, inheriting from <see cref="Behavior{T}"/>.</typeparam>
     /// <param name="parentControl">
@@ -46,7 +47,7 @@ public interface IDragDropService
         Control? parentControl,
         Func<Control, bool>? childFilter = null,
         Action<TBehavior>? configureBehavior = null)
-        where TBehavior : Behavior<Control>, new();
+        where TBehavior : BaseBehavior<Control>, new();
 
     /// <summary>
     /// Gets the index of a container within an ItemsControl.

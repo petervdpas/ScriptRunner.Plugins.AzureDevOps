@@ -3,6 +3,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Xaml.Interactivity;
+using ScriptRunner.Plugins.AzureDevOps.Behaviors;
 using ScriptRunner.Plugins.AzureDevOps.Interfaces;
 using ScriptRunner.Plugins.Logging;
 
@@ -33,7 +34,7 @@ public class DragDropService : IDragDropService
     public void AttachBehavior<TBehavior>(
         ItemsControl? itemsControl, 
         Action<TBehavior>? configureBehavior = null)
-        where TBehavior : Behavior<Control>, new()
+        where TBehavior : BaseBehavior<Control>, new()
     {
         if (itemsControl is null)
         {
@@ -52,7 +53,7 @@ public class DragDropService : IDragDropService
                 continue;
             }
 
-            var behavior = new TBehavior();
+            var behavior = BehaviorFactory.Create<TBehavior>(_logger!);
             configureBehavior?.Invoke(behavior);
 
             Interaction.GetBehaviors(container).Add(behavior);
@@ -70,7 +71,7 @@ public class DragDropService : IDragDropService
         Control? parentControl,
         Func<Control, bool>? childFilter = null,
         Action<TBehavior>? configureBehavior = null)
-        where TBehavior : Behavior<Control>, new()
+        where TBehavior : BaseBehavior<Control>, new()
     {
         if (parentControl is null)
         {
@@ -84,7 +85,7 @@ public class DragDropService : IDragDropService
         {
             if (childFilter?.Invoke(child) == false) continue;
 
-            var behavior = new TBehavior();
+            var behavior = BehaviorFactory.Create<TBehavior>(_logger!);
             configureBehavior?.Invoke(behavior);
 
             Interaction.GetBehaviors(child).Add(behavior);
