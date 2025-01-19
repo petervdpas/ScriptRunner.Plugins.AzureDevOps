@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using ScriptRunner.Plugins.Attributes;
 using ScriptRunner.Plugins.AzureDevOps.Interfaces;
+using ScriptRunner.Plugins.Logging;
 using ScriptRunner.Plugins.Models;
 using ScriptRunner.Plugins.Utilities;
 
@@ -22,7 +23,7 @@ namespace ScriptRunner.Plugins.AzureDevOps;
     "1.0.0",
     PluginSystemConstants.CurrentPluginSystemVersion,
     PluginSystemConstants.CurrentFrameworkVersion,
-    ["IDevOpsQueryService", "IAzureDevOpsDialogService", "IDragDropDemo"])]
+    ["IDevOpsQueryService", "IAzureDevOpsDialogService", "IDragDropService", "IDragDropDemo"])]
 public class Plugin : BaseAsyncServicePlugin
 {
     /// <summary>
@@ -56,11 +57,18 @@ public class Plugin : BaseAsyncServicePlugin
 
         // Register QueryService
         services.AddSingleton<IDevOpsQueryService, DevOpsQueryService>();
+        
+        // Register DragDropService
+        services.AddSingleton<IDragDropService>(sp => 
+            new DragDropService(sp.GetRequiredService<IPluginLogger>()));
 
         services.AddSingleton<IAzureDevOpsDialogService>(sp =>
             new AzureDevOpsDialogService(sp.GetRequiredService<IDevOpsQueryService>()));
 
-        services.AddSingleton<IDragDropDemo, DragDropDemo>();
+        services.AddSingleton<IDragDropDemo>(sp =>
+            new DragDropDemo(
+                sp.GetRequiredService<IDragDropService>(), 
+                sp.GetRequiredService<IPluginLogger>()));
     }
 
     /// <summary>

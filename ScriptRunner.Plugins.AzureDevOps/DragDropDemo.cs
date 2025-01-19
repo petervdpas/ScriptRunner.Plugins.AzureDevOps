@@ -18,18 +18,18 @@ namespace ScriptRunner.Plugins.AzureDevOps;
 public class DragDropDemo : IDragDropDemo
 {
     private readonly IPluginLogger? _logger;
+    private readonly IDragDropService _dragDropService;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DragDropDemo" /> class with a logger.
+    /// Initializes a new instance of the <see cref="DragDropDemo"/> class with a logger and drag-drop service.
     /// </summary>
-    /// <param name="logger">
-    ///     An optional logger implementing <see cref="IPluginLogger" /> used to log drag-and-drop events.
-    /// </param>
-    public DragDropDemo(IPluginLogger? logger)
+    /// <param name="logger">An optional logger implementing <see cref="IPluginLogger"/> for drag-and-drop events.</param>
+    /// <param name="dragDropService">A drag-and-drop service for attaching behaviors.</param>
+    public DragDropDemo(IDragDropService dragDropService, IPluginLogger? logger)
     {
+        _dragDropService = dragDropService ?? throw new ArgumentNullException(nameof(dragDropService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-
     /// <summary>
     ///     Displays a drag-and-drop demo dialog with the specified title, width, and height.
     /// </summary>
@@ -63,7 +63,7 @@ public class DragDropDemo : IDragDropDemo
         {
             _logger?.Information("Dialog opened. Attaching behaviors after delay...");
             await Task.Delay(50); // Add a slight delay to ensure the layout is complete
-            AttachBehaviors(dialog);
+            AttachBehaviors(dialog, viewModel);
         };
 
         // Display the dialog and return the result
@@ -71,91 +71,47 @@ public class DragDropDemo : IDragDropDemo
     }
 
     /// <summary>
-    ///     Attaches drag-and-drop behaviors to the dialog controls.
+    /// Attaches drag-and-drop behaviors to the dialog controls.
     /// </summary>
     /// <param name="dialog">The dialog to configure.</param>
-    private void AttachBehaviors(DragDropDialog dialog)
+    /// <param name="viewModel">The ViewModel associated with the dialog.</param>
+    private void AttachBehaviors(DragDropDialog dialog, DragDropDialogModel viewModel)
     {
-        _logger?.Information("Attaching behaviors...");
+        _logger?.Information("Attaching drag-and-drop behaviors...");
 
-        AttachDragBehavior(dialog, "ItemListBox");
-        AttachDropBehavior(dialog, "GridItemsControl");
-
-        _logger?.Information("Finished attaching behaviors.");
-    }
-
-    /// <summary>
-    ///     Attaches drag behavior to a list or items control.
-    /// </summary>
-    private void AttachDragBehavior(DragDropDialog dialog, string controlName)
-    {
-        var control = dialog.FindControl<ItemsControl>(controlName);
-
-        if (control is null)
+        // Attach drag behavior to the ItemListBox
+        var itemListBox = dialog.FindControl<ItemsControl>("ItemListBox");
+        _dragDropService.AttachBehavior<DragBehavior>(itemListBox, behavior =>
         {
-            _logger?.Warning($"Control with name '{controlName}' not found.");
-            return;
-        }
-
-        _logger?.Information($"Found {controlName}. Attaching DragBehavior...");
-
-        for (var i = 0; i < control.ItemCount; i++)
-        {
-            var container = control.ContainerFromIndex(i);
-            if (container is null)
+            behavior.DragStartedAction = data =>
             {
-                _logger?.Warning($"No container found for item at index {i}.");
-                continue;
-            }
-
-            var behavior = new DragBehavior
-            {
-                DragData = control.Items.ElementAt(i)
+                _logger?.Information($"Drag started with data: {data}");
             };
+        });
 
-            behavior.SetLogger(_logger);
-            Interaction.GetBehaviors(container).Add(behavior);
-        }
-    }
-
-    /// <summary>
-    ///     Attaches drop behavior to an item-control.
-    /// </summary>
-    private void AttachDropBehavior(DragDropDialog dialog, string controlName)
-    {
-        var control = dialog.FindControl<ItemsControl>(controlName);
-
-        if (control is null)
+        // Attach drop behavior to the GridItemsControl
+        var gridItemsControl = dialog.FindControl<ItemsControl>("GridItemsControl");
+        _dragDropService.AttachBehavior<DropBehavior>(gridItemsControl, behavior =>
         {
-            _logger?.Warning($"Control with name '{controlName}' not found.");
-            return;
-        }
-
-        _logger?.Information($"Found {controlName}. Attaching DropBehavior...");
-
-        for (var i = 0; i < control.ItemCount; i++)
-        {
-            var container = control.ContainerFromIndex(i);
-            if (container is null)
+            behavior.DropAction = droppedData =>
             {
-                _logger?.Warning($"No container found for item at index {i}.");
-                continue;
-            }
-
-            var behavior = new DropBehavior();
-            behavior.SetLogger(_logger);
-
-            // Capture the current index in a local variable
-            var index = i;
-
-            // Attach the DropCompleted event handler
-            behavior.DropCompleted += (s, droppedData) =>
-            {
-                _logger?.Information($"Drop completed on container at index {index} with data: {droppedData}");
-                // Additional logic for handling the drop
+                _logger?.Information($"Drop action executed with data: {droppedData}");
+                if (droppedData is not string text) return;
+                
+                // Find the index of the drop target
+                var index = _dragDropService.GetIndexFromContainer(gridItemsControl, behavior.AssociatedObject);
+                if (index >= 0 && index < viewModel.GridItems.Count)
+                {
+                    viewModel.GridItems[index] = text;
+                    _logger?.Information($"GridItems updated at index {index} with data: {text}");
+                }
+                else
+                {
+                    _logger?.Warning("Invalid index for drop action.");
+                }
             };
+        });
 
-            Interaction.GetBehaviors(container).Add(behavior);
-        }
+        _logger?.Information("Behaviors attached successfully.");
     }
 }

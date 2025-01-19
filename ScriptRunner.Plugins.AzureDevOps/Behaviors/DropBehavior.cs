@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactivity;
-using ScriptRunner.Plugins.AzureDevOps.ViewModels;
 using ScriptRunner.Plugins.Logging;
 
 namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
@@ -14,6 +13,8 @@ namespace ScriptRunner.Plugins.AzureDevOps.Behaviors;
 /// </summary>
 public class DropBehavior : Behavior<Control>
 {
+    private IPluginLogger? _logger;
+        
     /// <summary>
     ///     Defines the
     ///     <see>
@@ -24,7 +25,11 @@ public class DropBehavior : Behavior<Control>
     public static readonly StyledProperty<object?> DroppedDataProperty =
         AvaloniaProperty.Register<DropBehavior, object?>(nameof(DroppedData));
 
-    private IPluginLogger? _logger;
+    /// <summary>
+    /// Defines the <see cref="DropAction"/> property, which specifies an action to execute when data is dropped.
+    /// </summary>
+    public static readonly StyledProperty<Action<object?>?> DropActionProperty =
+        AvaloniaProperty.Register<DropBehavior, Action<object?>?>(nameof(DropAction));
 
     /// <summary>
     ///     Gets or sets the data dropped onto the control.
@@ -35,6 +40,15 @@ public class DropBehavior : Behavior<Control>
         set => SetValue(DroppedDataProperty, value);
     }
 
+    /// <summary>
+    /// Gets or sets the action to be executed when data is dropped.
+    /// </summary>
+    public Action<object?>? DropAction
+    {
+        get => GetValue(DropActionProperty);
+        set => SetValue(DropActionProperty, value);
+    }
+    
     /// <summary>
     ///     Sets the logger for drag-and-drop events.
     /// </summary>
@@ -50,7 +64,9 @@ public class DropBehavior : Behavior<Control>
     public event EventHandler<object?>? DropCompleted;
 
     /// <summary>
-    ///     Called when the behavior is attached to a control.
+    /// Called when the behavior is attached to a control.
+    /// This method enables drag-and-drop functionality by setting the <see cref="DragDrop.AllowDropProperty"/> 
+    /// and registering the <see cref="DragDrop.DropEvent"/> handler.
     /// </summary>
     protected override void OnAttached()
     {
@@ -69,64 +85,32 @@ public class DropBehavior : Behavior<Control>
     }
 
     /// <summary>
-    ///     Called when the behavior is detached from a control.
+    /// Called when the behavior is detached from a control.
+    /// This method removes the <see cref="DragDrop.DropEvent"/> handler to clean up resources.
     /// </summary>
     protected override void OnDetaching()
     {
         base.OnDetaching();
-
         AssociatedObject?.RemoveHandler(DragDrop.DropEvent, OnDrop);
     }
 
+    /// <summary>
+    /// Handles the <see cref="DragDrop.DropEvent"/> to process dropped data and execute the specified action.
+    /// </summary>
+    /// <param name="sender">The control where the drop occurred.</param>
+    /// <param name="e">Event data containing information about the drop operation.</param>
     private void OnDrop(object? sender, DragEventArgs e)
     {
-        if (e.Data.Contains(DataFormats.Text))
-        {
-            var droppedText = e.Data.GetText();
-            if (string.IsNullOrEmpty(droppedText))
-            {
-                _logger?.Warning("Dropped data is empty.");
-                return;
-            }
+        if (!e.Data.Contains(DataFormats.Text)) return;
+        
+        var droppedText = e.Data.GetText();
+        DroppedData = droppedText;
 
-            if (AssociatedObject?.Parent is ItemsControl
-                {
-                    DataContext: DragDropDialogModel viewModel
-                } parentControl)
-            {
-                // Get the index of the dropped container
-                var index = GetIndexFromContainer(parentControl, AssociatedObject);
+        if (string.IsNullOrEmpty(droppedText)) return;
+        
+        DropAction?.Invoke(droppedText);
 
-                if (index >= 0 && index < viewModel.GridItems.Count)
-                    viewModel.GridItems[index] = droppedText;
-                else
-                    _logger?.Warning($"Invalid index {index}. Cannot update GridItems.");
-            }
-            else
-            {
-                _logger?.Warning("Parent control is not an ItemsControl or DataContext is invalid.");
-            }
-
-            DropCompleted?.Invoke(this, droppedText);
-        }
-        else
-        {
-            _logger?.Warning("Drop: invalid data format.");
-        }
-    }
-
-    private static int GetIndexFromContainer(ItemsControl parentControl, Control? container)
-    {
-        while (container != null && container != parentControl)
-        {
-            // Use ItemsControl.IndexFromContainer directly to get the index
-            var index = parentControl.IndexFromContainer(container);
-            if (index >= 0) return index;
-
-            // Ascend the tree to find the actual container
-            container = container.Parent as Control;
-        }
-
-        return -1; // Not found
+        // Invoke the DropCompleted event
+        DropCompleted?.Invoke(this, droppedText);
     }
 }

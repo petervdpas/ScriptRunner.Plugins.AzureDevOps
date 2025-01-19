@@ -30,7 +30,12 @@
                     <TextBlock Text="{Binding}" Padding="10" Background="LightGray"
                                DragDrop.AllowDrop="True">
                         <behaviors:Interaction.Behaviors>
-                            <local:DragBehavior DragData="{Binding}" />
+                            <local:DragBehavior 
+                                DragData="{Binding}"
+                                DragStartedAction="{Binding 
+                                DataContext.DragStartedCommand, 
+                                RelativeSource={RelativeSource AncestorType=Window}, 
+                                FallbackValue={x:Null}}" />
                         </behaviors:Interaction.Behaviors>
                     </TextBlock>
                 </DataTemplate>
@@ -50,7 +55,12 @@
                             Focusable="True" IsHitTestVisible="True" DragDrop.AllowDrop="True">
                         <behaviors:Interaction.Behaviors>
                             <local:PointerOverBehavior DefaultColor="White" PointerOverColor="LightBlue" />
-                            <local:DropBehavior DroppedData="{Binding}" />
+                            <local:DropBehavior 
+                                DroppedData="{Binding}" 
+                                DropAction="{Binding 
+                                DataContext.DropCompletedCommand, 
+                                RelativeSource={RelativeSource AncestorType=Window}, 
+                                FallbackValue={x:Null}}" />
                         </behaviors:Interaction.Behaviors>
                         <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>

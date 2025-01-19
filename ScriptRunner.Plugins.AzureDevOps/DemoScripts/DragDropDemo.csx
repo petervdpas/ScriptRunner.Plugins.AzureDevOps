@@ -8,7 +8,8 @@
 */
 
 var logger = GetLogger("DragDropDemo");
-var ddDemo = new DragDropDemo(logger: logger);
+var dragDropService = new DragDropService(logger: logger);
+var ddDemo = new DragDropDemo(dragDropService: dragDropService, logger: logger);
 
 var result = await ddDemo.DisplayDragDropDemoAsync(
     "Drag Drop Demo",
