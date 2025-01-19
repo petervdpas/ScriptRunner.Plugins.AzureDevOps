@@ -56,11 +56,6 @@ public class DropBehavior : Behavior<Control>
         }
         
         AssociatedObject.SetValue(DragDrop.AllowDropProperty, true);
-        
-        AssociatedObject.AddHandler(
-            DragDrop.DragOverEvent, 
-            OnDragOver, 
-            RoutingStrategies.Bubble);
         AssociatedObject.AddHandler(
             DragDrop.DropEvent, 
             OnDrop, 
@@ -73,32 +68,8 @@ public class DropBehavior : Behavior<Control>
     protected override void OnDetaching()
     {
         base.OnDetaching();
-        if (AssociatedObject == null) return;
-        
-        AssociatedObject.RemoveHandler(DragDrop.DragOverEvent, OnDragOver);
-        AssociatedObject.RemoveHandler(DragDrop.DropEvent, OnDrop);
-    }
 
-    private void OnDragOver(object? sender, DragEventArgs e)
-    {
-        _logger?.Information($"DragOver on {AssociatedObject}");
-
-        if (e.Data.Contains(DataFormats.Text))
-        {
-            e.DragEffects = DragDropEffects.Copy | DragDropEffects.Move;
-            e.Handled = true;
-
-            // Optional: Highlight the drop zone
-            if (AssociatedObject is Panel panel)
-            {
-                panel.Background = Brushes.LightBlue; // Example of visual feedback
-            }
-        }
-        else
-        {
-            e.DragEffects = DragDropEffects.None;
-            e.Handled = true;
-        }
+        AssociatedObject?.RemoveHandler(DragDrop.DropEvent, OnDrop);
     }
 
     private void OnDrop(object? sender, DragEventArgs e)
@@ -117,26 +88,45 @@ public class DropBehavior : Behavior<Control>
                     DataContext: DragDropDialogModel viewModel
                 } parentControl)
             {
-                var index = parentControl.IndexFromContainer(AssociatedObject);
+                // Get the index of the dropped container
+                var index = GetIndexFromContainer(parentControl, AssociatedObject);
+
                 if (index >= 0 && index < viewModel.GridItems.Count)
                 {
                     viewModel.GridItems[index] = droppedText;
                 }
+                else
+                {
+                    _logger?.Warning($"Invalid index {index}. Cannot update GridItems.");
+                }
+            }
+            else
+            {
+                _logger?.Warning("Parent control is not an ItemsControl or DataContext is invalid.");
             }
 
-            // Raise the event after successfully handling the drop
             DropCompleted?.Invoke(this, droppedText);
         }
         else
         {
             _logger?.Warning("Drop: invalid data format.");
         }
-
-        // Reset background
-        if (AssociatedObject is Panel panel)
-        {
-            panel.Background = Brushes.White;
-        }
     }
     
+    private static int GetIndexFromContainer(ItemsControl parentControl, Control? container)
+    {
+        while (container != null && container != parentControl)
+        {
+            // Use ItemsControl.IndexFromContainer directly to get the index
+            var index = parentControl.IndexFromContainer(container);
+            if (index >= 0)
+            {
+                return index;
+            }
+
+            // Ascend the tree to find the actual container
+            container = container.Parent as Control;
+        }
+        return -1; // Not found
+    }
 }

@@ -83,7 +83,6 @@ public class DragBehavior : Behavior<Control>
     
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        _logger?.Information($"PointerReleased on {AssociatedObject}");
         ResetOpacity();
     }
     
@@ -95,7 +94,7 @@ public class DragBehavior : Behavior<Control>
         }
     }
     
-    private async Task StartDragDropAsync(PointerPressedEventArgs e)
+    private async Task StartDragDropAsync(PointerPressedEventArgs eventArgs)
     {
         if (_isDragging) return;
         
@@ -113,10 +112,11 @@ public class DragBehavior : Behavior<Control>
             dragDataObject.Set(
                 DataFormats.Text, 
                 DragData?.ToString() ?? string.Empty);
-            _logger?.Information(
-                $"Data set for drag operation: {DragData?.ToString() ?? "<null>"}");
             
-            await DragDrop.DoDragDrop(e, dragDataObject, DragDropEffects.Copy | DragDropEffects.Move);
+            await DragDrop.DoDragDrop(
+                eventArgs, 
+                dragDataObject, 
+                DragDropEffects.Copy | DragDropEffects.Move);
         }
         catch (Exception ex)
         {
@@ -128,5 +128,4 @@ public class DragBehavior : Behavior<Control>
             _isDragging = false;
         }
     }
-    
 }

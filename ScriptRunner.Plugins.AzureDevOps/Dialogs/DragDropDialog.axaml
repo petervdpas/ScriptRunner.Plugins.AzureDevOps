@@ -15,6 +15,7 @@
         WindowStartupLocation="CenterScreen"
         x:DataType="vm:DragDropDialogModel">
     
+    
     <!-- Main Content: Drag and Drop Components -->
     <Grid ColumnDefinitions="1*,2*" Grid.Row="0">
         <!-- Left Side: List of Items -->
@@ -48,6 +49,7 @@
                     <Border BorderBrush="Black" BorderThickness="1" Background="White" 
                             Focusable="True" IsHitTestVisible="True" DragDrop.AllowDrop="True" >
                         <behaviors:Interaction.Behaviors>
+                            <local:PointerOverBehavior DefaultColor="White" PointerOverColor="LightBlue" />
                             <local:DropBehavior DroppedData="{Binding}"/>
                         </behaviors:Interaction.Behaviors>
                         <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" />

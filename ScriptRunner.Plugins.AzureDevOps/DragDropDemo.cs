@@ -144,10 +144,13 @@ public class DragDropDemo : IDragDropDemo
             var behavior = new DropBehavior();
             behavior.SetLogger(_logger);
 
+            // Capture the current index in a local variable
+            var index = i;
+
             // Attach the DropCompleted event handler
             behavior.DropCompleted += (s, droppedData) =>
             {
-                _logger?.Information($"Drop completed on container at index {i} with data: {droppedData}");
+                _logger?.Information($"Drop completed on container at index {index} with data: {droppedData}");
                 // Additional logic for handling the drop
             };
 
