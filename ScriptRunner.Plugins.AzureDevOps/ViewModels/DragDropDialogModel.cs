@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
 using ReactiveUI;
 
@@ -30,8 +31,10 @@ public class DragDropDialogModel : ReactiveObject
     public DragDropDialogModel()
     {
         Items = ["Item 1", "Item 2", "Item 3", "Item 4"];
-        // Initialize 4x4 grid with empty slots
-        GridItems = new ObservableCollection<string?>(new string?[16]);
+        // Initialize 4x4 grid with empty cells
+        GridItems = new ObservableCollection<GridCellViewModel>(
+            Enumerable.Range(0, 16).Select(_ => new GridCellViewModel())
+        );
         
         DragStartedCommand = ReactiveCommand.Create<object?>(OnDragStarted);
         DropCompletedCommand = ReactiveCommand.Create<object?>(OnDropCompleted);
@@ -43,9 +46,9 @@ public class DragDropDialogModel : ReactiveObject
     public ObservableCollection<string> Items { get; set; }
 
     /// <summary>
-    ///     GridItems
+    /// Gets the list of grid cells.
     /// </summary>
-    public ObservableCollection<string?> GridItems { get; set; }
+    public ObservableCollection<GridCellViewModel> GridItems { get; set; }
     
     /// <summary>
     /// Called when a drag operation starts.

@@ -61,7 +61,8 @@
                                     RelativeSource={RelativeSource AncestorType=Window}, 
                                     FallbackValue={x:Null}}" />
                         </behaviors:Interaction.Behaviors>
-                        <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <!-- ContentControl for dynamic content -->
+                        <ContentControl Content="{Binding CurrentContent}" />
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

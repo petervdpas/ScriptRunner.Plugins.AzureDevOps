@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using ScriptRunner.Plugins.AzureDevOps.Behaviors;
 using ScriptRunner.Plugins.AzureDevOps.Dialogs;
 using ScriptRunner.Plugins.AzureDevOps.Interfaces;
@@ -97,12 +99,19 @@ public class DragDropDemo : IDragDropDemo
                 _logger?.Information($"Drop action executed with data: {droppedData}");
                 if (droppedData is not string text) return;
                 
-                // Find the index of the drop target
                 var index = _dragDropService.GetIndexFromContainer(gridItemsControl, behavior.AssociatedObject);
                 if (index >= 0 && index < viewModel.GridItems.Count)
                 {
-                    viewModel.GridItems[index] = text;
-                    _logger?.Information($"GridItems updated at index {index} with data: {text}");
+                    var gridCell = viewModel.GridItems[index];
+                    gridCell.CurrentContent = new TextBlock
+                    {
+                        Text = text,
+                        Background = Brushes.LightGray,
+                        Padding = new Thickness(5),
+                        Margin = new Thickness(2)
+                    };
+
+                    _logger?.Information($"Set content of cell at index {index} to '{text}'.");
                 }
                 else
                 {
