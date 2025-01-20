@@ -103,13 +103,14 @@ public class DragDropDemo : IDragDropDemo
                 if (index >= 0 && index < viewModel.GridItems.Count)
                 {
                     var gridCell = viewModel.GridItems[index];
-                    gridCell.CurrentContent = new TextBlock
+                    gridCell.RemoveContent();
+                    gridCell.AddContent(new TextBlock
                     {
                         Text = text,
                         Background = Brushes.LightGray,
                         Padding = new Thickness(5),
                         Margin = new Thickness(2)
-                    };
+                    });
 
                     _logger?.Information($"Set content of cell at index {index} to '{text}'.");
                 }
