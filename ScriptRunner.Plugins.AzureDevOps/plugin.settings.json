@@ -2,41 +2,49 @@
   {
     "Key": "PluginName",
     "Type": "string",
-    "DefaultValue": "AzureDevOps"
+    "DefaultValue": "AzureDevOps",
+    "IsSecret": false
   },
   {
     "Key": "Organization",
     "Type": "string",
-    "DefaultValue": "your-organization"
+    "DefaultValue": "your-organization",
+    "IsSecret": false
   },
   {
     "Key": "Project",
     "Type": "string",
-    "DefaultValue": "your-project"
+    "DefaultValue": "your-project",
+    "IsSecret": false
   },
   {
     "Key": "PersonalAccessToken",
     "Type": "string",
-    "DefaultValue": "your-personal-access-token"
+    "DefaultValue": "your-personal-access-token",
+    "IsSecret": true
   },
   {
     "Key": "AreaPath",
     "Type": "string",
-    "DefaultValue": "your-project\\TeamName\\AreaPath"
+    "DefaultValue": "your-project\\TeamName\\AreaPath",
+    "IsSecret": false
   },
   {
     "Key": "ApiEndpoint",
     "Type": "string",
-    "DefaultValue": "https://dev.azure.com"
+    "DefaultValue": "https://dev.azure.com",
+    "IsSecret": false
   },
   {
     "Key": "Timeout",
     "Type": "int",
-    "DefaultValue": 30
+    "DefaultValue": 30,
+    "IsSecret": false
   },
   {
     "Key": "DbPath",
     "Type": "string",
-    "DefaultValue": "azuredevops.db"
+    "DefaultValue": "azuredevops.db",
+    "IsSecret": false
   }
 ]
